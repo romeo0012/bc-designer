@@ -1965,13 +1965,13 @@ data:
       Object.keys(K8S_ST).forEach((s) => { const i = mkEl("span", "sim-key"); i.append(mkEl("i", "sim-sw st-" + K8S_CLS[s]), document.createTextNode(T(K8S_ST[s]))); legend.appendChild(i); });
       { const i = mkEl("span", "sim-key"); i.append(mkEl("i", "sim-sw st-excluded"), document.createTextNode(T("mimo cluster"))); legend.appendChild(i); }
       box.append(phases, legend, mkEl("p", "note", T("Kubernetes se instaluje jen na uzly etcd/control-plane a worker; ostatní VM (firewall, databáze, provoz...) zůstávají beze změny. Workery se připojují ke control plane přes kubeadm join.")));
-      const topo = mkEl("div", "sim-topo"), top = mkEl("div", "sim-top"), cols = mkEl("div", "sim-cols"), cards = [], byName = new Map(all.map((n) => [n.name, n])), apiEp = plan.control[0].ip + ":6443";
-      top.append(mkEl("div", "sim-internet", "INTERNET"), mkEl("span", "sim-arrow", "→"), mkEl("div", "sim-wan", "WAN"));
+      const topo = mkEl("div", "sim-topo"), cols = mkEl("div", "sim-cols"), cards = [], byName = new Map(all.map((n) => [n.name, n])), apiEp = plan.control[0].ip + ":6443";
       const groups = new Map(); plan.vms.forEach((v) => { if (!groups.has(v.net)) groups.set(v.net, []); groups.get(v.net).push(v); });
       const order = NETS.filter((n) => groups.has(n));   // sloupce = sítě (VLAN) podle Architekt módu
       order.forEach((net) => {
-        const members = groups.get(net), tag = net, col = mkEl("div", "sim-col"), grp = mkEl("div", "sim-group"), head = mkEl("div", "sim-ghead");
-        head.append(mkEl("b", "", T(NET_TITLE[net])), mkEl("small", "", T("{n} VM", { n: members.length }))); grp.appendChild(head);
+        const members = groups.get(net), col = mkEl("div", "sim-col"), grp = mkEl("div", "sim-group"), head = mkEl("div", "sim-ghead");
+        const vr = mkEl("div", "dp-vrow"); vr.append(mkEl("span", "dp-vtag", "VLAN"), mkEl("b", "dp-vname", net));   // VLAN podle Architekt módu, jen k zobrazení
+        head.append(mkEl("b", "", T(NET_TITLE[net])), mkEl("small", "", T("{n} VM", { n: members.length })), vr); grp.appendChild(head);
         members.forEach((v) => {
           const n = byName.get(v.name), card = mkEl("div", "sim-vm" + (n ? "" : " st-excluded")), t1 = mkEl("div", "sim-vtop"), badge = mkEl("span", "sim-badge");
           t1.append(mkEl("b", "", v.name), badge);
@@ -1981,9 +1981,9 @@ data:
           const det = mkEl("div", "sim-det"), vmst = mkEl("div", "sim-sub"), dots = K8sInstaller.NODE_STEPS.map(() => mkEl("i", "trk-dot")), steps = mkEl("div", "trk-steps"); steps.append(...dots);
           card.append(vmst, steps, det); grp.appendChild(card); cards.push({ n, card, badge, dots, det, vmst });
         });
-        col.append(mkEl("div", "sim-tab", tag), grp); cols.appendChild(col);
+        col.append(grp); cols.appendChild(col);
       });
-      topo.append(top, cols); box.appendChild(topo);
+      topo.append(cols); box.appendChild(topo);
 
       // --- ovládání, zprávy, výsledek ---
       const actions = mkEl("div", "actions"), go = mkEl("button", "btn primary dp-go"), stop = mkEl("button", "btn", T("Zastavit")), reset = mkEl("button", "btn danger", T("Vynulovat simulaci"));
