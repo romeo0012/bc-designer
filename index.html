@@ -189,19 +189,9 @@
   .sim-sw.st-failed { border-color: var(--danger); background: color-mix(in srgb, var(--danger) 30%, transparent); }
   .sim-sw.st-excluded { border-color: var(--muted); border-style: dashed; opacity: .5; }
   .sim-topo { margin: 14px 0 6px; }
-  .sim-top { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
-  .sim-internet, .sim-wan { padding: 8px 22px; border: 2px solid var(--vm-border); border-radius: 8px; background: var(--vm-bg); font-weight: 700; letter-spacing: .08em; }
-  .sim-wan { border-style: dashed; border-color: var(--ok); color: var(--ok); }
   .sim-arrow { color: var(--muted); }
   .sim-cols { display: flex; gap: 14px; overflow-x: auto; align-items: flex-start; padding-bottom: 8px; }
   .sim-col { flex: 0 0 280px; }
-  .hl-topo .sim-cols { flex-wrap: wrap; align-items: stretch; overflow: visible; }
-  .hl-topo .sim-col { min-width: 0; display: flex; flex-direction: column; } .hl-topo .sim-tab { align-self: flex-start; }
-  .hl-topo .sim-group { display: flex; flex-wrap: wrap; gap: 8px; flex: 1; align-content: flex-start; }
-  .hl-topo .sim-vtop { flex-direction: column; align-items: flex-start; gap: 3px; } .hl-topo .sim-vm b { font-size: 13px; overflow-wrap: anywhere; } .hl-topo .sim-vm { padding: 6px 8px; } .hl-topo .sim-sub { font-size: 11.5px; }
-  .hl-topo .sim-ghead { flex: 0 0 100%; margin-bottom: 0; }
-  .hl-topo .sim-vm { flex: 1 1 124px; min-width: 124px; margin-bottom: 0; cursor: default; }
-  .sim-tab { display: inline-block; margin: 0 0 6px 8px; padding: 2px 12px; border: 1px solid var(--vm-border); border-radius: 6px; color: var(--vm-border); font-weight: 700; font-size: 12px; letter-spacing: .06em; background: var(--panel); }
   .sim-group { background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 10px; }
   .sim-ghead { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
   .sim-ghead b { flex: 1; font-size: 12.5px; text-transform: uppercase; letter-spacing: .03em; color: var(--muted); }
@@ -552,6 +542,21 @@ const catOf = (role) => { const c = String(role).split(" (")[0]; return CAT_BACK
 const NETS = ["DMZ", "K8S", "OPS", "CICD"], NET_TITLE = { DMZ: "Bezpečnost", K8S: "Kubernetes cluster", OPS: "Provozní", CICD: "Vývojové" };
 const netDefault = (r) => { const c = catOf(r.role); return c === "Provozní" ? "OPS" : c === "Vývojové" ? "CICD" : c === "Bezpečnost" && !K8S_CP.has(r.name) ? "DMZ" : "K8S"; };
 const netOf = (r) => NETS.includes(r.vlan) ? r.vlan : netDefault(r);
+// Topologie ve všech záložkách (Deploy VM, Deploy Kubernetes, Provozní asistent) vypadá stejně: sloupce = sítě DMZ, K8S, OPS, CICD,
+// v záhlaví název, počet VM, volitelné tlačítko (extra) a zobrazená VLAN z Architekt módu; karty VM plní fillVm(vm, skupina).
+function netColumns(vms, fillVm, extra) {
+  const groups = new Map(); vms.forEach((v) => { if (!groups.has(v.net)) groups.set(v.net, []); groups.get(v.net).push(v); });
+  const cols = mkEl("div", "sim-cols");
+  NETS.filter((n) => groups.has(n)).forEach((net) => {
+    const members = groups.get(net), col = mkEl("div", "sim-col"), grp = mkEl("div", "sim-group"), head = mkEl("div", "sim-ghead");
+    const vr = mkEl("div", "dp-vrow"); vr.append(mkEl("span", "dp-vtag", "VLAN"), mkEl("b", "dp-vname", net));   // VLAN podle Architekt módu, jen k zobrazení
+    head.append(mkEl("b", "", T(NET_TITLE[net])), mkEl("small", "", T("{n} VM", { n: members.length })), ...(extra ? [extra(net, members)] : []), vr); grp.appendChild(head);
+    members.forEach((v) => fillVm(v, grp));
+    col.append(grp); cols.appendChild(col);
+  });
+  return cols;
+}
+const vmSpec = (v) => mkEl("div", "sim-spec", T("CPU {c} GHz · RAM {r} GiB · Disk {d} GB · {t}", { c: fmt(v.ghz_actual), r: fmt(v.mem_bytes / 1073741824), d: v.disk_gib, t: v.disk_tier }));
 function groupsOf(u, list) {
   if (!u.groupByRole) return [{ role: null, idx: list.map((_, i) => i) }];
   const m = new Map();
@@ -918,26 +923,18 @@ function renderDeploy(u, list, el) {
   box.append(legend, mkEl("p", "note", T("Klikněte na VM pro vyřazení z nasazení (nebo návrat). Nasazené VM zůstávají zelené.")));
 
   // --- topologie: sloupce = sítě (VLAN) s kartami VM ---
-  const topo = mkEl("div", "sim-topo"), cols = mkEl("div", "sim-cols");
-  const groups = new Map(); vmsAll.forEach((v) => { if (!groups.has(v.net)) groups.set(v.net, []); groups.get(v.net).push(v); });
-  const order = NETS.filter((n) => groups.has(n));   // sloupce = sítě (VLAN) v pevném pořadí DMZ, K8S, OPS, CICD
-  const cards = [], groupBtns = [];
-  order.forEach((net) => {
-    const members = groups.get(net);
-    const col = mkEl("div", "sim-col"), grp = mkEl("div", "sim-group"), head = mkEl("div", "sim-ghead"), gb = mkEl("button", "btn primary dp-row", "Deploy"); gb.type = "button";
-    gb.addEventListener("click", () => start(new Set(members.map((v) => v.name)))); groupBtns.push({ members, gb });
-    const vr = mkEl("div", "dp-vrow"); vr.append(mkEl("span", "dp-vtag", "VLAN"), mkEl("b", "dp-vname", net));   // VLAN podle Architekt módu, jen k zobrazení
-    head.append(mkEl("b", "", T(NET_TITLE[net])), mkEl("small", "", T("{n} VM", { n: members.length })), gb, vr); grp.appendChild(head);
-    members.forEach((v) => {
-      const card = mkEl("div", "sim-vm"), badge = mkEl("span", "sim-badge"), det = mkEl("div", "sim-det"), dots = Deployer.STEPS.map(() => mkEl("i", "trk-dot")), steps = mkEl("div", "trk-steps");
-      card.tabIndex = 0; card.setAttribute("role", "button");
-      const top1 = mkEl("div", "sim-vtop"); top1.append(mkEl("b", "", v.name), badge); steps.append(...dots);
-      card.append(top1, mkEl("div", "sim-sub", trRole(v.role)), mkEl("div", "sim-spec", T("CPU {c} GHz · RAM {r} GiB · Disk {d} GB · {t}", { c: fmt(v.ghz_actual), r: fmt(v.mem_bytes / 1073741824), d: v.disk_gib, t: v.disk_tier })), steps, det);
-      const toggle = () => { if (stOf(v.name) !== "planned" || running()) return; if (skip.has(v.name)) skip.delete(v.name); else skip.add(v.name); update(); };
-      card.addEventListener("click", toggle); card.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); toggle(); } });
-      grp.appendChild(card); cards.push({ v, card, badge, dots, det });
-    });
-    col.append(grp); cols.appendChild(col);
+  const topo = mkEl("div", "sim-topo"), cards = [], groupBtns = [];
+  const cols = netColumns(vmsAll, (v, grp) => {
+    const card = mkEl("div", "sim-vm"), badge = mkEl("span", "sim-badge"), det = mkEl("div", "sim-det"), dots = Deployer.STEPS.map(() => mkEl("i", "trk-dot")), steps = mkEl("div", "trk-steps");
+    card.tabIndex = 0; card.setAttribute("role", "button");
+    const top1 = mkEl("div", "sim-vtop"); top1.append(mkEl("b", "", v.name), badge); steps.append(...dots);
+    card.append(top1, mkEl("div", "sim-sub", trRole(v.role)), vmSpec(v), steps, det);
+    const toggle = () => { if (stOf(v.name) !== "planned" || running()) return; if (skip.has(v.name)) skip.delete(v.name); else skip.add(v.name); update(); };
+    card.addEventListener("click", toggle); card.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); toggle(); } });
+    grp.appendChild(card); cards.push({ v, card, badge, dots, det });
+  }, (net, members) => {
+    const gb = mkEl("button", "btn primary dp-row", "Deploy"); gb.type = "button";
+    gb.addEventListener("click", () => start(new Set(members.map((v) => v.name)))); groupBtns.push({ members, gb }); return gb;
   });
   topo.append(cols); box.appendChild(topo);
 
@@ -1083,23 +1080,15 @@ function renderK8s(u, list, el) {
   Object.keys(K8S_ST).forEach((s) => { const i = mkEl("span", "sim-key"); i.append(mkEl("i", "sim-sw st-" + K8S_CLS[s]), document.createTextNode(T(K8S_ST[s]))); legend.appendChild(i); });
   { const i = mkEl("span", "sim-key"); i.append(mkEl("i", "sim-sw st-excluded"), document.createTextNode(T("mimo cluster"))); legend.appendChild(i); }
   box.append(phases, legend, mkEl("p", "note", T("Kubernetes se instaluje jen na uzly etcd/control-plane a worker; ostatní VM (firewall, databáze, provoz...) zůstávají beze změny. Workery se připojují ke control plane přes kubeadm join.")));
-  const topo = mkEl("div", "sim-topo"), cols = mkEl("div", "sim-cols"), cards = [], byName = new Map(all.map((n) => [n.name, n])), apiEp = plan.control[0].ip + ":6443";
-  const groups = new Map(); plan.vms.forEach((v) => { if (!groups.has(v.net)) groups.set(v.net, []); groups.get(v.net).push(v); });
-  const order = NETS.filter((n) => groups.has(n));   // sloupce = sítě (VLAN) podle Architekt módu
-  order.forEach((net) => {
-    const members = groups.get(net), col = mkEl("div", "sim-col"), grp = mkEl("div", "sim-group"), head = mkEl("div", "sim-ghead");
-    const vr = mkEl("div", "dp-vrow"); vr.append(mkEl("span", "dp-vtag", "VLAN"), mkEl("b", "dp-vname", net));   // VLAN podle Architekt módu, jen k zobrazení
-    head.append(mkEl("b", "", T(NET_TITLE[net])), mkEl("small", "", T("{n} VM", { n: members.length })), vr); grp.appendChild(head);
-    members.forEach((v) => {
-      const n = byName.get(v.name), card = mkEl("div", "sim-vm" + (n ? "" : " st-excluded")), t1 = mkEl("div", "sim-vtop"), badge = mkEl("span", "sim-badge");
-      t1.append(mkEl("b", "", v.name), badge);
-      const isCp = n && plan.control.includes(n), kind = !n ? T("mimo Kubernetes (VM bez balíčku)") : isCp ? "control-plane · " + n.ip : "worker · " + n.ip + " → " + apiEp;
-      card.append(t1, mkEl("div", "sim-sub", trRole(v.role)), mkEl("div", "sim-spec", T("CPU {c} GHz · RAM {r} GiB · Disk {d} GB · {t}", { c: fmt(v.ghz_actual), r: fmt(v.mem_bytes / 1073741824), d: v.disk_gib, t: v.disk_tier })), mkEl("div", "sim-sub", kind));
-      if (!n) { badge.textContent = T("vyřazeno"); card.setAttribute("aria-label", v.name + ": " + T("vyřazeno")); grp.appendChild(card); return; }
-      const det = mkEl("div", "sim-det"), vmst = mkEl("div", "sim-sub"), dots = K8sInstaller.NODE_STEPS.map(() => mkEl("i", "trk-dot")), steps = mkEl("div", "trk-steps"); steps.append(...dots);
-      card.append(vmst, steps, det); grp.appendChild(card); cards.push({ n, card, badge, dots, det, vmst });
-    });
-    col.append(grp); cols.appendChild(col);
+  const topo = mkEl("div", "sim-topo"), cards = [], byName = new Map(all.map((n) => [n.name, n])), apiEp = plan.control[0].ip + ":6443";
+  const cols = netColumns(plan.vms, (v, grp) => {
+    const n = byName.get(v.name), card = mkEl("div", "sim-vm" + (n ? "" : " st-excluded")), t1 = mkEl("div", "sim-vtop"), badge = mkEl("span", "sim-badge");
+    t1.append(mkEl("b", "", v.name), badge);
+    const isCp = n && plan.control.includes(n), kind = !n ? T("mimo Kubernetes (VM bez balíčku)") : isCp ? "control-plane · " + n.ip : "worker · " + n.ip + " → " + apiEp;
+    card.append(t1, mkEl("div", "sim-sub", trRole(v.role)), vmSpec(v), mkEl("div", "sim-sub", kind));
+    if (!n) { badge.textContent = T("vyřazeno"); card.setAttribute("aria-label", v.name + ": " + T("vyřazeno")); grp.appendChild(card); return; }
+    const det = mkEl("div", "sim-det"), vmst = mkEl("div", "sim-sub"), dots = K8sInstaller.NODE_STEPS.map(() => mkEl("i", "trk-dot")), steps = mkEl("div", "trk-steps"); steps.append(...dots);
+    card.append(vmst, steps, det); grp.appendChild(card); cards.push({ n, card, badge, dots, det, vmst });
   });
   topo.append(cols); box.appendChild(topo);
 
@@ -1221,19 +1210,14 @@ function renderHeal(u, list, el) {
   reset.addEventListener("click", () => { clearTimeout(s.timer); eng.halt(); delete healStore[u.id]; renderDetail(); dpbRender(true); });
 
   // --- přehled, uzly, incidenty, události ---
-  const tiles = mkEl("div", "stats"), topo = mkEl("div", "sim-topo hl-topo"), top = mkEl("div", "sim-top"), cols = mkEl("div", "sim-cols"), cards = [];
-  top.append(mkEl("div", "sim-internet", "INTERNET"), mkEl("span", "sim-arrow", "→"), mkEl("div", "sim-wan", "WAN"));
-  [["CONTROL PLANE", plan.control], ["WORKERS", plan.workers]].forEach(([tag, nodes]) => {
-    if (!nodes.length) return;
-    const col = mkEl("div", "sim-col"); col.style.flex = nodes.length + " 1 " + nodes.length * 138 + "px"; const grp = mkEl("div", "sim-group"), head = mkEl("div", "sim-ghead");
-    head.append(mkEl("b", "", tag === "WORKERS" ? "Workers" : "Control plane"), mkEl("small", "", T("{n} VM", { n: nodes.length }))); grp.appendChild(head);
-    nodes.forEach((n) => {
-      const card = mkEl("div", "sim-vm"), badge = mkEl("span", "sim-badge"), det = mkEl("div", "sim-det"), t1 = mkEl("div", "sim-vtop"); t1.append(mkEl("b", "", n.name), badge);
-      card.append(t1, mkEl("div", "sim-sub", (tag === "WORKERS" ? "worker" : "control-plane") + " · " + n.ip), det); grp.appendChild(card); cards.push({ n, card, badge, det });
-    });
-    col.append(mkEl("div", "sim-tab", tag), grp); cols.appendChild(col);
-  });
-  topo.append(top, cols);
+  const tiles = mkEl("div", "stats"), topo = mkEl("div", "sim-topo"), cards = [], byName = new Map(all.map((n) => [n.name, n]));
+  topo.append(netColumns(plan.vms, (v, grp) => {
+    const n = byName.get(v.name), card = mkEl("div", "sim-vm" + (n ? "" : " st-excluded")), badge = mkEl("span", "sim-badge"), det = mkEl("div", "sim-det"), t1 = mkEl("div", "sim-vtop"); t1.append(mkEl("b", "", v.name), badge);
+    const kind = !n ? T("mimo Kubernetes (VM bez balíčku)") : (plan.control.includes(n) ? "control-plane" : "worker") + " · " + n.ip;
+    card.append(t1, mkEl("div", "sim-sub", trRole(v.role)), vmSpec(v), mkEl("div", "sim-sub", kind));
+    if (!n) { badge.textContent = T("vyřazeno"); card.setAttribute("aria-label", v.name + ": " + T("vyřazeno")); grp.appendChild(card); return; }
+    card.append(det); grp.appendChild(card); cards.push({ n, card, badge, det });
+  }));
   const dashBox = mkEl("div", "hl-dash"), incBox = mkEl("div", "hl-incs"), evBox = mkEl("div", "hl-events"), fsel = document.createElement("select");
   [["important", "Důležité události"], ["all", "Všechny události"]].forEach(([v, t]) => fsel.add(new Option(T(t), v))); fsel.value = healCfg.filter; fsel.addEventListener("change", () => { healCfg.filter = fsel.value; save(); draw(); });
   const evHead = mkEl("div", "hl-head"); evHead.append(mkEl("h3", "", T("Události clusteru")), fsel);
