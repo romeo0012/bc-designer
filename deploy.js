@@ -27,7 +27,7 @@ const DP = (() => {
         let name = (r.count > 1 ? base + "-" + k : base).slice(-64).replace(/^[^A-Za-z0-9]+/, ""), n = name, i = 2;
         while (seen.has(n)) n = name + "-" + (i++);
         seen.add(n);
-        out.push(Object.assign({ name: n, role: r.role, row: r.key }, spec));
+        out.push(Object.assign({ name: n, role: r.role, row: r.key, net: r.net }, spec));
       }
     });
     return out;

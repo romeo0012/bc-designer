@@ -151,7 +151,7 @@ data:
             let name = (r.count > 1 ? base + "-" + k : base).slice(-64).replace(/^[^A-Za-z0-9]+/, ""), n = name, i = 2;
             while (seen.has(n)) n = name + "-" + (i++);
             seen.add(n);
-            out.push(Object.assign({ name: n, role: r.role, row: r.key }, spec));
+            out.push(Object.assign({ name: n, role: r.role, row: r.key, net: r.net }, spec));
           }
         });
         return out;
@@ -595,11 +595,12 @@ data:
       "Image v knihovně simulovaného tenantu:": "Images in the simulated tenant library:",
       "VLAN (volitelně)": "VLAN (optional)",
       "Bez VLAN": "No VLAN",
-      "VLAN se vybírá u každé skupiny topologie níže, každá větev má vlastní. Skupina bez VLAN se vytvoří bez síťové karty.": "The VLAN is chosen for each topology group below; every branch has its own. A group without a VLAN is created without a network card.",
-      "VLAN této skupiny": "VLAN of this group",
-      "VLAN skupiny {g}": "VLAN of group {g}",
-      "UUID VLAN skupiny „{g}“ není platné.": "The VLAN UUID of group “{g}” is not valid.",
-      "Skupiny bez VLAN (VM se vytvoří bez síťové karty): {g}.": "Groups without a VLAN (VMs are created without a network card): {g}.",
+      "Topologie je řazená podle sítí (VLAN). Do které sítě VM patří, se nastavuje v Architekt módu (sloupec VLAN). Zde se každé síti vybere VLAN tenantu; síť bez VLAN se vytvoří bez síťové karty.": "The topology is arranged by network (VLAN). Which network a VM belongs to is set in Architect mode (VLAN column). Here you choose the tenant VLAN for each network; a network without a VLAN is created without a network card.",
+      "Síť (VLAN), do které VM patří; podle ní se řadí topologie v záložkách Deploy.": "The network (VLAN) the VM belongs to; the topology in the Deploy tabs is arranged by it.",
+      "VLAN sítě {g}": "VLAN of network {g}",
+      "UUID VLAN sítě „{g}“ není platné.": "The VLAN UUID of network “{g}” is not valid.",
+      "Sítě bez VLAN (VM se vytvoří bez síťové karty): {g}.": "Networks without a VLAN (VMs are created without a network card): {g}.",
+      "Kubernetes cluster": "Kubernetes cluster",
       "SSH klíč (volitelně)": "SSH key (optional)",
       "Bez klíče": "No key",
       "Souběžně nasazovaných VM": "VMs deployed in parallel",
@@ -954,7 +955,8 @@ data:
       td.num input { max-width: 66px; }
       #detail table tbody td:nth-child(1) { min-width: 118px; }
       #detail table tbody td:nth-child(2) { min-width: 250px; }
-      #detail table tbody td:nth-child(7) { min-width: 104px; }
+      #detail table tbody td:nth-child(3) { min-width: 84px; }
+      #detail table tbody td:nth-child(8) { min-width: 104px; }
       #detail table th, #detail table td { padding: 6px 5px; }
       tfoot td { font-weight: 700; border-bottom: 0; }
       .tablewrap { overflow-x: auto; }
@@ -1039,7 +1041,7 @@ data:
       .bgrp-h { font-weight: 700; }
       .bgrp.hl .bgrp-h { color: var(--accent); }
       .bgrp-h small { font-weight: 400; color: var(--muted); margin: 0 8px 0 4px; }
-      #detail thead th:nth-child(n+8):nth-child(-n+13) { text-align: right; }
+      #detail thead th:nth-child(n+9):nth-child(-n+14) { text-align: right; }
       td.pr { text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; font-size: 13px; }
       td.pr-total { font-weight: 700; }
       .pr-sub { display: block; color: var(--muted); font-size: 11px; font-weight: 400; letter-spacing: 0; text-transform: none; white-space: nowrap; }
@@ -1429,6 +1431,11 @@ data:
     // Kategorie = text role před závorkou ("Aplikační (Webová vrstva)" -> "Aplikační"; anglické názvy se mapují zpět); pořadí jako v Kubernetes Clusteru.
     const CAT_ORDER = ["Bezpečnost", "Aplikační", "Databázové", "Provozní", "Vývojové"];
     const catOf = (role) => { const c = String(role).split(" (")[0]; return CAT_BACK[c.toLowerCase()] || c; };
+    // Síť (VLAN) každé VM: DMZ / K8S / OPS / CICD. Volí se v tabulce Architekt módu (sloupec VLAN) a podle ní se řadí topologie v záložkách Deploy.
+    // Výchozí: Bezpečnost -> DMZ (kromě etcd / control-plane / master), Provozní -> OPS, Vývojové -> CICD, vše ostatní (etcd, Aplikační, Databázové) -> K8S.
+    const NETS = ["DMZ", "K8S", "OPS", "CICD"], NET_TITLE = { DMZ: "Bezpečnost", K8S: "Kubernetes cluster", OPS: "Provozní", CICD: "Vývojové" };
+    const netDefault = (r) => { const c = catOf(r.role); return c === "Provozní" ? "OPS" : c === "Vývojové" ? "CICD" : c === "Bezpečnost" && !K8S_CP.has(r.name) ? "DMZ" : "K8S"; };
+    const netOf = (r) => NETS.includes(r.vlan) ? r.vlan : netDefault(r);
     function groupsOf(u, list) {
       if (!u.groupByRole) return [{ role: null, idx: list.map((_, i) => i) }];
       const m = new Map();
@@ -1500,15 +1507,15 @@ data:
 
       const wrap = document.createElement("div"); wrap.className = "tablewrap";
       const tb = document.createElement("table");
-      const HEAD = ["VM", "Role", T("Počet"), "CPU (GHz)", "RAM (GiB)", "Disk (GB)", T("Třída disku"), T("Cena CPU"), T("Cena RAM"), T("Cena disk"), T("Cena IaaS"), T("Cloudlety"), T("Cena PaaS"), ""];
+      const HEAD = ["VM", "Role", "VLAN", T("Počet"), "CPU (GHz)", "RAM (GiB)", "Disk (GB)", T("Třída disku"), T("Cena CPU"), T("Cena RAM"), T("Cena disk"), T("Cena IaaS"), T("Cloudlety"), T("Cena PaaS"), ""];
       const thead = document.createElement("thead"), htr = document.createElement("tr");
       HEAD.forEach(x => { const th = document.createElement("th"); th.textContent = x; htr.appendChild(th); }); thead.appendChild(htr);
       // v záhlaví Ceny PaaS jsou parametry výpočtu: utilizace a rezervace
       const paasSub = document.createElement("small"); paasSub.className = "pr-sub";
-      htr.children[12].append(document.createElement("br"), document.createTextNode(" "), paasSub);
+      htr.children[13].append(document.createElement("br"), document.createTextNode(" "), paasSub);
       const tfoot = document.createElement("tfoot"), ftr = document.createElement("tr");
-      for (let k = 0; k < 13; k++) ftr.appendChild(document.createElement("td"));   // první buňka zabírá 2 sloupce (VM + Role)
-      ftr.firstChild.colSpan = 2; ftr.firstChild.textContent = T("Celkem");
+      for (let k = 0; k < 13; k++) ftr.appendChild(document.createElement("td"));   // první buňka zabírá 3 sloupce (VM + Role + VLAN)
+      ftr.firstChild.colSpan = 3; ftr.firstChild.textContent = T("Celkem");
       tfoot.appendChild(ftr);
       const body = document.createElement("tbody");
       tb.append(thead, body, tfoot);
@@ -1521,6 +1528,9 @@ data:
         const text = (key) => { const i2 = document.createElement("input"); i2.value = key === "role" ? trRole(r[key]) : r[key]; i2.title = i2.value; i2.addEventListener("change", () => { r[key] = i2.value; commit(key === "role" && !!u.groupByRole); }); return i2; };
         const numIn = (key, min, redraw) => { const i2 = document.createElement("input"); i2.type = "number"; i2.min = min; i2.step = "any"; i2.value = r[key]; i2.addEventListener("change", () => { r[key] = key === "count" ? Math.max(1, Math.round(num(i2.value, 1))) : num(i2.value, r[key]); commit(true); }); return i2; };
         cell().appendChild(text("name")); cell().appendChild(text("role"));
+        // síť (VLAN): do dat se zapíše jen zvolená hodnota, bez volby platí výchozí podle role
+        const vsel = document.createElement("select"); NETS.forEach(x => vsel.add(new Option(x, x))); vsel.value = netOf(r); vsel.title = T("Síť (VLAN), do které VM patří; podle ní se řadí topologie v záložkách Deploy.");
+        vsel.addEventListener("change", () => { r.vlan = vsel.value; commit(false); }); cell().appendChild(vsel);
         cell("num").appendChild(numIn("count", 1)); cell("num").appendChild(numIn("ghz", 0));
         cell("num").appendChild(numIn("ram", 0)); cell("num").appendChild(numIn("disk", 0));
         const sel = document.createElement("select"); TIERS.forEach(x => { const o = document.createElement("option"); o.textContent = x; if (x === r.tier) o.selected = true; sel.appendChild(o); });
@@ -1534,14 +1544,14 @@ data:
         const dc = cell(); if (!r.shared) dc.appendChild(del);
         if (r.shared) { tr.classList.add("shared-row"); tr.title = T("Sdíleno z Kubernetes Clusteru, upravte ho tam."); tr.querySelectorAll("input,select").forEach(x => { x.disabled = true; }); }
         body.appendChild(tr);
-        if (r.note) { const n = document.createElement("tr"); if (hl) n.className = "hl-row"; const td = document.createElement("td"); td.colSpan = 14; td.className = "note"; td.textContent = r.name + ": " + r.note; n.appendChild(td); body.appendChild(n); }
+        if (r.note) { const n = document.createElement("tr"); if (hl) n.className = "hl-row"; const td = document.createElement("td"); td.colSpan = 15; td.className = "note"; td.textContent = r.name + ": " + r.note; n.appendChild(td); body.appendChild(n); }
       };
       groupsOf(u, list).forEach(g => {
         const hl = isHl(u, g.role);
         if (g.role !== null) {
           const s = sum(g.idx.map(i => list[i]));
           const gr = document.createElement("tr"); gr.className = "grp" + (hl ? " hl" : "");
-          const gd = document.createElement("td"); gd.colSpan = 14; gd.textContent = T(g.role);
+          const gd = document.createElement("td"); gd.colSpan = 15; gd.textContent = T(g.role);
           const sm = document.createElement("small"); sm.textContent = `${fmt(s.vm)} VM · ${fmt(s.ghz)} GHz · ${fmt(s.ram)} GiB · ${fmtGb(s.disk)}`; gd.appendChild(sm);
           if (hl) { const b = document.createElement("span"); b.className = "badge"; b.style.marginLeft = "8px"; b.textContent = T("Pro Business Use-Case"); gd.appendChild(b); }
           const tag = sharedTag(g.role); if (tag) { const sh = document.createElement("small"); sh.textContent = "· " + tag; gd.appendChild(sh); }
@@ -1613,7 +1623,6 @@ data:
     const simStore = {};     // scénář -> stav simulace
     let simUi = null;        // aktuálně vykreslená obrazovka (kvůli živým aktualizacím)
     const mkEl = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text !== undefined) e.textContent = text; return e; };
-    const SIM_COLS = [["Bezpečnost", "DMZ"], ["Aplikační", "APP"], ["Databázové", "DATA"], ["Provozní", "OPS"], ["Vývojové", "CI/CD"]];
     const SIM_ST = { planned: "plánováno", queued: "ve frontě", deploying: "nasazuje se", deployed: "nasazeno", failed: "chyba", excluded: "vyřazeno" };
     const SIM_STEP = { create: "Vytvoření VM", clone: "Klon image", wait: "Čekání na klon", resize: "Zvětšení disku", attach: "Disk a síť", verify: "Ověření", start: "Spuštění" };
     const SIM_STEP_ST = { pending: "čeká", running: "probíhá", ok: "hotovo", failed: "chyba", skipped: "přeskočeno", stopped: "přerušeno" };
@@ -1621,7 +1630,7 @@ data:
     function deployMsg(e) {
       switch (e.code) {
         case "image": return T("Vyberte image z knihovny.");
-        case "vlan": return e.group ? T("UUID VLAN skupiny „{g}“ není platné.", { g: T(e.group) }) : T("UUID VLAN není platné.");
+        case "vlan": return e.group ? T("UUID VLAN sítě „{g}“ není platné.", { g: e.group }) : T("UUID VLAN není platné.");
         case "key": return T("SSH klíč „{k}“ není platné UUID.", { k: e.value });
         case "none": return T("Není vybrána žádná VM.");
         case "max": return T("V jednom plánu je nejvýše {max} VM (vybráno {n}).", { max: e.max, n: e.n });
@@ -1735,11 +1744,7 @@ data:
 
     function renderDeploy(u, list, el) {
       const sim = simOf(u.id), skip = deploySkip[u.id] || (deploySkip[u.id] = new Set()), save = () => lsSet("usecase-deploy", deployCfg);
-      const vmsAll = DP.expand(list.map((r) => ({ key: r.name + "|" + r.role, name: r.name, role: r.role, count: r.count, ghz: r.ghz, ram: r.ram, disk: r.disk, tier: r.tier })), deployCfg.prefix || u.id);
-      // segment sítě = skupina topologie; u scénáře s Kubernetes (řádek etcd / control-plane / master) sdílí cluster jednu VLAN "K8S":
-      // řídicí VM a všechny VM skupin Aplikační a Databázové (stejná množina jako v instalaci Kubernetes)
-      const isK8s = list.some((r) => K8S_CP.has(r.name));
-      vmsAll.forEach((v) => { const c = catOf(v.role); v.net = isK8s && (["Aplikační", "Databázové"].includes(c) || K8S_CP.has(String(v.row).split("|")[0])) ? "K8S" : c; });
+      const vmsAll = DP.expand(list.map((r) => ({ key: r.name + "|" + r.role, name: r.name, role: r.role, count: r.count, ghz: r.ghz, ram: r.ram, disk: r.disk, tier: r.tier, net: netOf(r) })), deployCfg.prefix || u.id);   // síť (VLAN) každé VM podle sloupce VLAN v Architekt módu
       const stOf = (n) => (sim.vms[n] || {}).status || "planned", running = () => sim.run.status === "running";
       const touched = () => vmsAll.some((v) => stOf(v.name) !== "planned");
       const box = mkEl("div", "deploy");
@@ -1772,8 +1777,8 @@ data:
       setImg(); imgL.append(mkEl("span", "dp-lbl", T("Image z knihovny")), imgShow, imgBtn);
       const mkSel = (key, none, items) => { const s = document.createElement("select"); s.add(new Option(none, "")); items.forEach((i) => s.add(new Option(i.name, i.uuid))); s.value = deployCfg[key]; s.addEventListener("change", () => { deployCfg[key] = s.value; save(); }); return s; };
       const keyS = mkSel("key", T("Bez klíče"), []);
-      // každá skupina (větev) topologie má vlastní VLAN; předvyplní se podle názvu skupiny, dokud ji uživatel nezmění
-      const grpVlan = [], VLAN_DEFAULT = { "Bezpečnost": "DMZ síť", "Aplikační": "Interní síť APP", "Databázové": "Interní síť DATA", "Provozní": "Provozní síť OPS", "Vývojové": "Síť CI/CD", "K8S": "K8S" };
+      // každá síť (sloupec topologie: DMZ, K8S, OPS, CICD) má vlastní VLAN tenantu; předvyplní se podle názvu, dokud ji uživatel nezmění
+      const grpVlan = [], VLAN_DEFAULT = { DMZ: "DMZ síť", K8S: "K8S", OPS: "Provozní síť OPS", CICD: "Síť CI/CD" };
       const vlanOfCat = (cat) => deployCfg.vlans[cat] || "";
       const fillSel = () => {
         keyS.innerHTML = ""; keyS.add(new Option(T("Bez klíče"), "")); sim.lists.keys.forEach((i) => keyS.add(new Option(i.name, i.uuid))); keyS.value = deployCfg.key;
@@ -1801,7 +1806,7 @@ data:
         const cf = document.createElement("input"); cf.disabled = true; cf.placeholder = T("zatím nepoužito"); cf.title = T("Potvrzení ostrého nasazení bude vyžadováno až při zapnutí exekuce.");
         form.append(lbl(T("Adresa MCP serveru (zatím nepoužito)"), pu), lbl(T("Potvrzení ostrého nasazení"), cf));
       }
-      box.append(form, picker, mkEl("p", "note", T("VLAN se vybírá u každé skupiny topologie níže, každá větev má vlastní. Skupina bez VLAN se vytvoří bez síťové karty.")));
+      box.append(form, picker, mkEl("p", "note", T("Topologie je řazená podle sítí (VLAN). Do které sítě VM patří, se nastavuje v Architekt módu (sloupec VLAN). Zde se každé síti vybere VLAN tenantu; síť bez VLAN se vytvoří bez síťové karty.")));
 
       // --- legenda ---
       const legend = mkEl("div", "sim-legend");
@@ -1811,23 +1816,17 @@ data:
       // --- topologie: INTERNET -> WAN -> skupiny s kartami VM ---
       const topo = mkEl("div", "sim-topo"), top = mkEl("div", "sim-top"), cols = mkEl("div", "sim-cols");
       top.append(mkEl("div", "sim-internet", "INTERNET"), mkEl("span", "sim-arrow", "→"), mkEl("div", "sim-wan", "WAN"));
-      const groups = new Map(); vmsAll.forEach((v) => { const c = catOf(v.role); if (!groups.has(c)) groups.set(c, []); groups.get(c).push(v); });
-      const order = SIM_COLS.map((c) => c[0]).filter((c) => groups.has(c)).concat([...groups.keys()].filter((c) => !SIM_COLS.some((x) => x[0] === c)));
+      const groups = new Map(); vmsAll.forEach((v) => { if (!groups.has(v.net)) groups.set(v.net, []); groups.get(v.net).push(v); });
+      const order = NETS.filter((n) => groups.has(n));   // sloupce = sítě (VLAN) v pevném pořadí DMZ, K8S, OPS, CICD
       const cards = [], groupBtns = [];
-      order.forEach((cat) => {
-        const members = groups.get(cat), tag = (SIM_COLS.find((x) => x[0] === cat) || [cat, cat])[1];
+      order.forEach((net) => {
+        const members = groups.get(net);
         const col = mkEl("div", "sim-col"), grp = mkEl("div", "sim-group"), head = mkEl("div", "sim-ghead"), gb = mkEl("button", "btn primary dp-row", "Deploy"); gb.type = "button";
         gb.addEventListener("click", () => start(new Set(members.map((v) => v.name)))); groupBtns.push({ members, gb });
-        const segs = [...new Set(members.map((v) => v.net))];
-        const vrows = segs.map((seg) => {
-          const vs = document.createElement("select"), vr = mkEl("div", "dp-vrow"); vs.className = "dp-vlan"; vs.title = T("VLAN skupiny {g}", { g: seg === "K8S" ? seg : T(cat) }); vs.setAttribute("aria-label", vs.title);
-          vs.add(new Option(T("Bez VLAN"), ""));
-          vs.addEventListener("change", () => { deployCfg.vlans[seg] = vs.value; grpVlan.forEach((x) => { if (x.cat === seg && x.s !== vs) x.s.value = vs.value; }); save(); update(); });
-          grpVlan.push({ cat: seg, s: vs });
-          if (seg !== cat || segs.length > 1) vr.append(mkEl("span", "dp-vtag", seg === "K8S" ? seg : tag));   // štítek jen když skupina nemá jedinou "vlastní" VLAN
-          vr.append(vs); return vr;
-        });
-        head.append(mkEl("b", "", T(cat)), mkEl("small", "", T("{n} VM", { n: members.length })), gb, ...vrows); grp.appendChild(head);
+        const vs = document.createElement("select"), vr = mkEl("div", "dp-vrow"); vs.className = "dp-vlan"; vs.title = T("VLAN sítě {g}", { g: net }); vs.setAttribute("aria-label", vs.title);
+        vs.add(new Option(T("Bez VLAN"), "")); vs.addEventListener("change", () => { deployCfg.vlans[net] = vs.value; save(); update(); }); grpVlan.push({ cat: net, s: vs });
+        vr.append(mkEl("span", "dp-vtag", "VLAN"), vs);
+        head.append(mkEl("b", "", T(NET_TITLE[net])), mkEl("small", "", T("{n} VM", { n: members.length })), gb, vr); grp.appendChild(head);
         members.forEach((v) => {
           const card = mkEl("div", "sim-vm"), badge = mkEl("span", "sim-badge"), det = mkEl("div", "sim-det"), dots = Deployer.STEPS.map(() => mkEl("i", "trk-dot")), steps = mkEl("div", "trk-steps");
           card.tabIndex = 0; card.setAttribute("role", "button");
@@ -1837,7 +1836,7 @@ data:
           card.addEventListener("click", toggle); card.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); toggle(); } });
           grp.appendChild(card); cards.push({ v, card, badge, dots, det });
         });
-        col.append(mkEl("div", "sim-tab", tag), grp); cols.appendChild(col);
+        col.append(mkEl("div", "sim-tab", net), grp); cols.appendChild(col);
       });
       topo.append(top, cols); box.appendChild(topo);
 
@@ -1848,7 +1847,7 @@ data:
       stop.addEventListener("click", () => { if (sim.run.handle) { sim.run.handle.halt(); stop.disabled = true; } });
       reset.addEventListener("click", () => { if (running()) return; delete simStore[u.id]; simForget(u.id); skip.clear(); renderDetail(); dpbRender(true); });
 
-      const opts = () => ({ image: deployCfg.image, vlanOf: (vm) => vlanOfCat(vm.net || catOf(vm.role)), key: deployCfg.key, start: !!deployCfg.start, concurrency: deployCfg.concurrency, sleep: sim.cloud.sleep, pollMs: 1000, maxPolls: 120 });
+      const opts = () => ({ image: deployCfg.image, vlanOf: (vm) => vlanOfCat(vm.net), key: deployCfg.key, start: !!deployCfg.start, concurrency: deployCfg.concurrency, sleep: sim.cloud.sleep, pollMs: 1000, maxPolls: 120 });
       const eligible = (only) => vmsAll.filter((v) => !skip.has(v.name) && stOf(v.name) === "planned" && (!only || only.has(v.name)));
       const validate = (vms) => DP.validate({ image: deployCfg.image, vlans: deployCfg.vlans, key: deployCfg.key }, vms);
       // dry-run režimu Exekuce: vypíše volání, která by se provedla; nic neodesílá
@@ -1909,7 +1908,7 @@ data:
         if (val.errors.some((e) => e.code === "none") && (doneCount || sim.view.some((n) => stOf(n) === "failed"))) msgs.appendChild(mkEl("p", "dp-ok", T("Všechny vybrané VM jsou už nasazené nebo mají chybu.")));
         val.warnings.forEach((e) => msgs.appendChild(mkEl("p", "dp-warn", "ℹ " + deployMsg(e))));
         const noNet = [...new Set(el1.map((v) => v.net).filter((c) => !vlanOfCat(c)))];
-        if (noNet.length) msgs.appendChild(mkEl("p", "dp-warn", "ℹ " + T("Skupiny bez VLAN (VM se vytvoří bez síťové karty): {g}.", { g: noNet.map((c) => T(c)).join(", ") })));
+        if (noNet.length) msgs.appendChild(mkEl("p", "dp-warn", "ℹ " + T("Sítě bez VLAN (VM se vytvoří bez síťové karty): {g}.", { g: noNet.join(", ") })));
         dpbRender();
       }
       simUi = { id: u.id, update };
@@ -1944,7 +1943,7 @@ data:
     }
     // uzly clusteru podle scénáře: řádky etcd / control-plane = control plane, worker = workery; názvy stejné jako v Deployment módu
     function k8sPlan(u, list) {
-      const rows = list.map((r) => ({ key: r.name + "|" + r.role, name: r.name, role: r.role, count: r.count, ghz: r.ghz, ram: r.ram, disk: r.disk, tier: r.tier }));
+      const rows = list.map((r) => ({ key: r.name + "|" + r.role, name: r.name, role: r.role, count: r.count, ghz: r.ghz, ram: r.ram, disk: r.disk, tier: r.tier, net: netOf(r) }));
       const cpKeys = new Set(rows.filter((r) => K8S_CP.has(r.name)).map((r) => r.key)), wkKeys = new Set(rows.some((r) => K8S_WK.has(r.name)) ? rows.filter((r) => K8S_WK.has(r.name)).map((r) => r.key) : rows.filter((r) => ["Aplikační", "Databázové"].includes(catOf(r.role)) && !cpKeys.has(r.key)).map((r) => r.key));
       const vms = DP.expand(rows, deployCfg.prefix || u.id), cp = vms.filter((v) => cpKeys.has(v.row)), wk = vms.filter((v) => wkKeys.has(v.row));
       return { control: cp.map((v, i) => ({ name: v.name, ip: "192.168.1." + (101 + i), vm: v })), workers: wk.map((v, i) => ({ name: v.name, ip: "192.168.1." + (111 + i), vm: v })),
@@ -1986,11 +1985,11 @@ data:
       box.append(phases, legend, mkEl("p", "note", T("Kubernetes se instaluje jen na uzly etcd/control-plane a worker; ostatní VM (firewall, databáze, provoz...) zůstávají beze změny. Workery se připojují ke control plane přes kubeadm join.")));
       const topo = mkEl("div", "sim-topo"), top = mkEl("div", "sim-top"), cols = mkEl("div", "sim-cols"), cards = [], byName = new Map(all.map((n) => [n.name, n])), apiEp = plan.control[0].ip + ":6443";
       top.append(mkEl("div", "sim-internet", "INTERNET"), mkEl("span", "sim-arrow", "→"), mkEl("div", "sim-wan", "WAN"));
-      const groups = new Map(); plan.vms.forEach((v) => { const c = catOf(v.role); if (!groups.has(c)) groups.set(c, []); groups.get(c).push(v); });
-      const order = SIM_COLS.map((c) => c[0]).filter((c) => groups.has(c)).concat([...groups.keys()].filter((c) => !SIM_COLS.some((x) => x[0] === c)));
-      order.forEach((cat) => {
-        const members = groups.get(cat), tag = (SIM_COLS.find((x) => x[0] === cat) || [cat, cat])[1], col = mkEl("div", "sim-col"), grp = mkEl("div", "sim-group"), head = mkEl("div", "sim-ghead");
-        head.append(mkEl("b", "", T(cat)), mkEl("small", "", T("{n} VM", { n: members.length }))); grp.appendChild(head);
+      const groups = new Map(); plan.vms.forEach((v) => { if (!groups.has(v.net)) groups.set(v.net, []); groups.get(v.net).push(v); });
+      const order = NETS.filter((n) => groups.has(n));   // sloupce = sítě (VLAN) podle Architekt módu
+      order.forEach((net) => {
+        const members = groups.get(net), tag = net, col = mkEl("div", "sim-col"), grp = mkEl("div", "sim-group"), head = mkEl("div", "sim-ghead");
+        head.append(mkEl("b", "", T(NET_TITLE[net])), mkEl("small", "", T("{n} VM", { n: members.length }))); grp.appendChild(head);
         members.forEach((v) => {
           const n = byName.get(v.name), card = mkEl("div", "sim-vm" + (n ? "" : " st-excluded")), t1 = mkEl("div", "sim-vtop"), badge = mkEl("span", "sim-badge");
           t1.append(mkEl("b", "", v.name), badge);
@@ -2282,7 +2281,7 @@ data:
     function docVmStart(u, vms, sim) {
       const nameOf = (list, id) => { const x = list && list.find((i) => i.uuid === id); return x ? x.name : ""; }, L = sim.lists || {};
       const d = { id: Date.now() + "-" + Math.floor(Math.random() * 1e4), kind: "vm", uc: u.id, ucName: u.name, t0: iso(Date.now()), t1: null, status: "running", seq0: sim.seq,
-        cfg: { prefix: deployCfg.prefix || u.id, image: deployCfg.imageName || deployCfg.image, imageId: deployCfg.image, vlans: Object.fromEntries([...new Set(vms.map((v) => v.net || catOf(v.role)))].map((c) => [c, nameOf(L.vlans, deployCfg.vlans[c]) || deployCfg.vlans[c] || ""])), key: nameOf(L.keys, deployCfg.key) || deployCfg.key || "", start: !!deployCfg.start, concurrency: deployCfg.concurrency, failure: !!deployCfg.failure },
+        cfg: { prefix: deployCfg.prefix || u.id, image: deployCfg.imageName || deployCfg.image, imageId: deployCfg.image, vlans: Object.fromEntries([...new Set(vms.map((v) => v.net))].map((c) => [c, nameOf(L.vlans, deployCfg.vlans[c]) || deployCfg.vlans[c] || ""])), key: nameOf(L.keys, deployCfg.key) || deployCfg.key || "", start: !!deployCfg.start, concurrency: deployCfg.concurrency, failure: !!deployCfg.failure },
         vms: vms.map((v) => ({ name: v.name, role: v.role, smp: v.smp, cpu_mhz: v.cpu_mhz, mem_mib: Math.round(v.mem_bytes / 1048576), disk_gib: v.disk_gib, tier: v.disk_tier, status: "queued", uuid: "", disk: "", error: "" })), calls: [] };
       docsList.unshift(d); docsSave(); return d;
     }
@@ -2538,6 +2537,8 @@ data:
       const p = SZ.parse(text);
       if (!p.found.length) { renderReqOut(null, T("V zadání jsem nenašel nic, z čeho jde sizing spočítat. Uveďte např. počet uživatelů, požadavky za sekundu, objem dat, dostupnost, růst nebo špičky.")); return; }
       const res = SZ.adjust(factory(u), p, SZ.parse(u.brief || ""));
+      const keepNet = new Map(rowsOf(u.id).filter((r) => r.vlan).map((r) => [r.name + "|" + r.role, r.vlan]));   // zvolené VLAN přepočet nemění
+      res.rows.forEach((r) => { const v = keepNet.get(r.name + "|" + r.role); if (v) r.vlan = v; });
       rows[u.id] = res.rows; lsSet("usecase-v1-" + u.id, res.rows);
       lsSet(reqKey(u.id), { text, f: res.f, users: res.users, before: res.before, after: res.after });
       renderAll();
