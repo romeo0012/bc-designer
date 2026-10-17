@@ -57,11 +57,13 @@ Manifest `k8s.yaml` vytvoří v namespace `hackaithon`:
 - **Deployment** `bc-designer` (`nginx:1.27-alpine`), ConfigMap je připojená do `/usr/share/nginx/html`,
 - **Service** `bc-designer` na portu 80.
 
+ConfigMap je větší než 256 kB, proto se `k8s.yaml` musí aplikovat s `--server-side`. Obyčejné `kubectl apply` selže s chybou „metadata.annotations: Too long“.
+
 `ingress.yaml` publikuje aplikaci na `dev-kube.prg1paas.t-cloud.eu` pod cestou `/hackaithon`.
 
 ```bash
 kubectl create namespace hackaithon   # pokud ještě neexistuje
-kubectl apply -f k8s.yaml
+kubectl apply --server-side --force-conflicts -f k8s.yaml
 kubectl apply -f ingress.yaml
 kubectl -n hackaithon rollout status deployment/bc-designer
 ```
