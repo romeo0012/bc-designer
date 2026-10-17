@@ -13,7 +13,7 @@ spec:
     - host: dev-kube.prg1paas.t-cloud.eu
       http:
         paths:
-          - path: /hackaithon(/|$)(.*)
+          - path: /bc-designer(/|$)(.*)
             pathType: ImplementationSpecific
             backend:
               service:

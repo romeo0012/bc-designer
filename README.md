@@ -59,7 +59,7 @@ Manifest `k8s.yaml` vytvoří v namespace `hackaithon`:
 
 ConfigMap je větší než 256 kB, proto se `k8s.yaml` musí aplikovat s `--server-side`. Obyčejné `kubectl apply` selže s chybou „metadata.annotations: Too long“.
 
-`ingress.yaml` publikuje aplikaci na `dev-kube.prg1paas.t-cloud.eu` pod cestou `/hackaithon`.
+`ingress.yaml` publikuje aplikaci na `dev-kube.prg1paas.t-cloud.eu` pod cestou `/bc-designer` (https://dev-kube.prg1paas.t-cloud.eu/bc-designer/).
 
 ```bash
 kubectl create namespace hackaithon   # pokud ještě neexistuje
