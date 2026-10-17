@@ -104,7 +104,7 @@ data:
           failOn: null,                       // { vm: název VM, step: krok } - jednorázová simulovaná chyba tenantu
           sleep: (ms) => opt.sleep(ms / opt.speed),
           reset() { S = fresh(); api.failOn = null; },
-          restore(snap) { S = JSON.parse(JSON.stringify(snap)); api.failOn = null; },   // obnova uloženého stavu simulovaného cloudu
+          restore(snap) { S = JSON.parse(JSON.stringify(snap)); api.failOn = null; fresh().vlans.forEach((v) => { if (!(S.vlans || (S.vlans = [])).some((x) => x.name === v.name)) S.vlans.push(v); }); },   // obnova uloženého stavu simulovaného cloudu
           snapshot() { return JSON.parse(JSON.stringify(S)); },
           async request(method, path, o) {
             o = o || {}; const p = String(path).replace(/^\/+|\/+$/g, "").split("/"), [step, speedClass] = classify(method, p, o.params);
@@ -595,11 +595,9 @@ data:
       "Image v knihovně simulovaného tenantu:": "Images in the simulated tenant library:",
       "VLAN (volitelně)": "VLAN (optional)",
       "Bez VLAN": "No VLAN",
-      "Topologie je řazená podle sítí (VLAN). Do které sítě VM patří, se nastavuje v Architekt módu (sloupec VLAN). Zde se každé síti vybere VLAN tenantu; síť bez VLAN se vytvoří bez síťové karty.": "The topology is arranged by network (VLAN). Which network a VM belongs to is set in Architect mode (VLAN column). Here you choose the tenant VLAN for each network; a network without a VLAN is created without a network card.",
+      "Topologie je řazená podle sítí (VLAN). Do které VLAN VM patří, se nastavuje v Architekt módu (sloupec VLAN); při nasazení se VM připojí do VLAN stejného názvu.": "The topology is arranged by network (VLAN). Which VLAN a VM belongs to is set in Architect mode (VLAN column); on deployment the VM is attached to the VLAN of the same name.",
+      "V tenantu chybí VLAN pro sítě (VM se vytvoří bez síťové karty): {g}.": "The tenant has no VLAN for the networks (VMs are created without a network card): {g}.",
       "Síť (VLAN), do které VM patří; podle ní se řadí topologie v záložkách Deploy.": "The network (VLAN) the VM belongs to; the topology in the Deploy tabs is arranged by it.",
-      "VLAN sítě {g}": "VLAN of network {g}",
-      "UUID VLAN sítě „{g}“ není platné.": "The VLAN UUID of network “{g}” is not valid.",
-      "Sítě bez VLAN (VM se vytvoří bez síťové karty): {g}.": "Networks without a VLAN (VMs are created without a network card): {g}.",
       "Kubernetes cluster": "Kubernetes cluster",
       "SSH klíč (volitelně)": "SSH key (optional)",
       "Bez klíče": "No key",
@@ -1093,7 +1091,7 @@ data:
       .deploy .sim-ghead { flex-wrap: wrap; }
       .dp-vrow { flex: 0 0 100%; order: 5; display: flex; align-items: center; gap: 6px; }
       .dp-vtag { flex: 0 0 auto; min-width: 40px; font-size: 11px; font-weight: 700; letter-spacing: .03em; text-transform: uppercase; color: var(--muted); }
-      .dp-vlan { flex: 1; min-width: 0; padding: 4px 7px; font: inherit; font-size: 12px; border: 1px solid var(--input-border); border-radius: 6px; background: var(--input-bg); color: var(--text); }
+      .dp-vname { flex: 1; min-width: 0; font-size: 13px; letter-spacing: .02em; }
       .sim-vm { border: 2px solid var(--vm-border); border-radius: 8px; background: var(--vm-bg); padding: 8px 10px; margin-bottom: 8px; cursor: pointer; transition: border-color .25s, background .25s; }
       .sim-vm:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
       .sim-vtop { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
@@ -1617,8 +1615,7 @@ data:
     // --- Deployment mód: simulace nasazení VM v Business Cloud IaaS přímými voláními API (bez skriptů) ---
     // Stránka volá API přímo (Deployer), ale proti simulovanému cloudu v prohlížeči (cloudsim.js): nic se nevytváří a nepotřebují
     // se přihlašovací údaje. Karty VM mění barvu podle stavu a dole se zobrazuje průběh volání API.
-    const deployCfg = Object.assign({ prefix: "", image: "", imageName: "", vlans: {}, key: "", start: false, concurrency: 3, speed: 4, failure: false, mode: "sim", liveUrl: "" }, lsGet("usecase-deploy") || {});
-    if (!deployCfg.vlans || typeof deployCfg.vlans !== "object") deployCfg.vlans = {};   // VLAN po skupinách topologie: { skupina: UUID }, "" = bez síťové karty
+    const deployCfg = Object.assign({ prefix: "", image: "", imageName: "", key: "", start: false, concurrency: 3, speed: 4, failure: false, mode: "sim", liveUrl: "" }, lsGet("usecase-deploy") || {});
     const deploySkip = {};   // scénář -> názvy VM vyřazených z nasazení
     const simStore = {};     // scénář -> stav simulace
     let simUi = null;        // aktuálně vykreslená obrazovka (kvůli živým aktualizacím)
@@ -1777,20 +1774,9 @@ data:
       setImg(); imgL.append(mkEl("span", "dp-lbl", T("Image z knihovny")), imgShow, imgBtn);
       const mkSel = (key, none, items) => { const s = document.createElement("select"); s.add(new Option(none, "")); items.forEach((i) => s.add(new Option(i.name, i.uuid))); s.value = deployCfg[key]; s.addEventListener("change", () => { deployCfg[key] = s.value; save(); }); return s; };
       const keyS = mkSel("key", T("Bez klíče"), []);
-      // každá síť (sloupec topologie: DMZ, K8S, OPS, CICD) má vlastní VLAN; nabízí se jen sítě přiřazené v Architekt módu, výchozí je VLAN stejného názvu
-      const grpVlan = [];
-      const vlanOfCat = (cat) => deployCfg.vlans[cat] || "";
-      const fillSel = () => {
-        keyS.innerHTML = ""; keyS.add(new Option(T("Bez klíče"), "")); sim.lists.keys.forEach((i) => keyS.add(new Option(i.name, i.uuid))); keyS.value = deployCfg.key;
-        const assigned = new Set(grpVlan.map((g) => g.cat)), items = sim.lists.vlans.filter((i) => assigned.has(i.name));   // jen VLAN přiřazené v Architekt módu
-        grpVlan.forEach(({ cat, s }) => {
-          let cur = deployCfg.vlans[cat];
-          if (cur && !items.some((i) => i.uuid === cur)) cur = undefined;                    // uložená VLAN už v tenantu není
-          if (cur === undefined) { const d = items.find((i) => i.name === cat); cur = d ? d.uuid : ""; deployCfg.vlans[cat] = cur; }
-          s.innerHTML = ""; s.add(new Option(T("Bez VLAN"), "")); items.forEach((i) => s.add(new Option(i.name, i.uuid))); s.value = cur;
-        });
-        save();
-      };
+      // VLAN každé VM je síť zvolená v Architekt módu (DMZ / K8S / OPS / CICD); VM se připojí do VLAN tenantu stejného názvu, nic se tu nevybírá
+      const vlanUuid = (net) => { const x = ((sim.lists && sim.lists.vlans) || []).find((i) => i.name === net); return x ? x.uuid : ""; };
+      const fillSel = () => { keyS.innerHTML = ""; keyS.add(new Option(T("Bez klíče"), "")); sim.lists.keys.forEach((i) => keyS.add(new Option(i.name, i.uuid))); keyS.value = deployCfg.key; };
       const chk = (key, text) => { const l = mkEl("label", "dp-check"), c = document.createElement("input"); c.type = "checkbox"; c.checked = !!deployCfg[key]; c.addEventListener("change", () => { deployCfg[key] = c.checked; save(); }); l.append(c, document.createTextNode(" " + text)); return l; };
       const numSel = (key, values, fmtv) => { const s = document.createElement("select"); values.forEach((v) => s.add(new Option(fmtv(v), String(v)))); if (!values.includes(+deployCfg[key])) deployCfg[key] = values[Math.min(2, values.length - 1)]; s.value = String(deployCfg[key]); s.addEventListener("change", () => { deployCfg[key] = +s.value; save(); if (key === "speed") sim.cloud.speed = deployCfg.speed; }); return s; };
       form.append(lbl(T("Předpona názvu VM"), prefix), imgL, lbl(T("SSH klíč (volitelně)"), keyS),
@@ -1806,7 +1792,7 @@ data:
         const cf = document.createElement("input"); cf.disabled = true; cf.placeholder = T("zatím nepoužito"); cf.title = T("Potvrzení ostrého nasazení bude vyžadováno až při zapnutí exekuce.");
         form.append(lbl(T("Adresa MCP serveru (zatím nepoužito)"), pu), lbl(T("Potvrzení ostrého nasazení"), cf));
       }
-      box.append(form, picker, mkEl("p", "note", T("Topologie je řazená podle sítí (VLAN). Do které sítě VM patří, se nastavuje v Architekt módu (sloupec VLAN). Zde se každé síti vybere VLAN tenantu; síť bez VLAN se vytvoří bez síťové karty.")));
+      box.append(form, picker, mkEl("p", "note", T("Topologie je řazená podle sítí (VLAN). Do které VLAN VM patří, se nastavuje v Architekt módu (sloupec VLAN); při nasazení se VM připojí do VLAN stejného názvu.")));
 
       // --- legenda ---
       const legend = mkEl("div", "sim-legend");
@@ -1822,9 +1808,7 @@ data:
         const members = groups.get(net);
         const col = mkEl("div", "sim-col"), grp = mkEl("div", "sim-group"), head = mkEl("div", "sim-ghead"), gb = mkEl("button", "btn primary dp-row", "Deploy"); gb.type = "button";
         gb.addEventListener("click", () => start(new Set(members.map((v) => v.name)))); groupBtns.push({ members, gb });
-        const vs = document.createElement("select"), vr = mkEl("div", "dp-vrow"); vs.className = "dp-vlan"; vs.title = T("VLAN sítě {g}", { g: net }); vs.setAttribute("aria-label", vs.title);
-        vs.add(new Option(T("Bez VLAN"), "")); vs.addEventListener("change", () => { deployCfg.vlans[net] = vs.value; save(); update(); }); grpVlan.push({ cat: net, s: vs });
-        vr.append(mkEl("span", "dp-vtag", "VLAN"), vs);
+        const vr = mkEl("div", "dp-vrow"); vr.append(mkEl("span", "dp-vtag", "VLAN"), mkEl("b", "dp-vname", net));   // VLAN podle Architekt módu, jen k zobrazení
         head.append(mkEl("b", "", T(NET_TITLE[net])), mkEl("small", "", T("{n} VM", { n: members.length })), gb, vr); grp.appendChild(head);
         members.forEach((v) => {
           const card = mkEl("div", "sim-vm"), badge = mkEl("span", "sim-badge"), det = mkEl("div", "sim-det"), dots = Deployer.STEPS.map(() => mkEl("i", "trk-dot")), steps = mkEl("div", "trk-steps");
@@ -1846,9 +1830,9 @@ data:
       stop.addEventListener("click", () => { if (sim.run.handle) { sim.run.handle.halt(); stop.disabled = true; } });
       reset.addEventListener("click", () => { if (running()) return; delete simStore[u.id]; simForget(u.id); skip.clear(); renderDetail(); dpbRender(true); });
 
-      const opts = () => ({ image: deployCfg.image, vlanOf: (vm) => vlanOfCat(vm.net), key: deployCfg.key, start: !!deployCfg.start, concurrency: deployCfg.concurrency, sleep: sim.cloud.sleep, pollMs: 1000, maxPolls: 120 });
+      const opts = () => ({ image: deployCfg.image, vlanOf: (vm) => vlanUuid(vm.net), key: deployCfg.key, start: !!deployCfg.start, concurrency: deployCfg.concurrency, sleep: sim.cloud.sleep, pollMs: 1000, maxPolls: 120 });
       const eligible = (only) => vmsAll.filter((v) => !skip.has(v.name) && stOf(v.name) === "planned" && (!only || only.has(v.name)));
-      const validate = (vms) => DP.validate({ image: deployCfg.image, vlans: deployCfg.vlans, key: deployCfg.key }, vms);
+      const validate = (vms) => DP.validate({ image: deployCfg.image, key: deployCfg.key }, vms);
       // dry-run režimu Exekuce: vypíše volání, která by se provedla; nic neodesílá
       function showPlan(vms) {
         planBox.innerHTML = ""; const o = opts(), plans = vms.map((v) => [v, Deployer.plan(v, o)]), total = plans.reduce((s, [, p]) => s + p.length, 0);
@@ -1900,14 +1884,13 @@ data:
         const el1 = eligible(null), val = validate(el1), doneCount = vmsAll.filter((v) => stOf(v.name) === "deployed").length;
         go.disabled = running() || val.errors.length > 0; go.textContent = deployCfg.mode === "live" ? T("Zobrazit plán exekuce (dry-run) ({n})", { n: el1.length }) : T("Deploy do Business Cloud IaaS – simulace ({n})", { n: el1.length });
         stop.disabled = !running() || (sim.run.handle && false); reset.disabled = running();
-        grpVlan.forEach(({ s }) => { s.disabled = running(); });
         groupBtns.forEach(({ members, gb }) => { const e = eligible(new Set(members.map((v) => v.name))); gb.disabled = running() || !e.length || val.errors.some((x) => x.code === "image"); });
         msgs.innerHTML = ""; const errs = val.errors.filter((e) => e.code !== "none");
         errs.forEach((e) => msgs.appendChild(mkEl("p", "dp-err", "⚠ " + deployMsg(e))));
         if (val.errors.some((e) => e.code === "none") && (doneCount || sim.view.some((n) => stOf(n) === "failed"))) msgs.appendChild(mkEl("p", "dp-ok", T("Všechny vybrané VM jsou už nasazené nebo mají chybu.")));
         val.warnings.forEach((e) => msgs.appendChild(mkEl("p", "dp-warn", "ℹ " + deployMsg(e))));
-        const noNet = [...new Set(el1.map((v) => v.net).filter((c) => !vlanOfCat(c)))];
-        if (noNet.length) msgs.appendChild(mkEl("p", "dp-warn", "ℹ " + T("Sítě bez VLAN (VM se vytvoří bez síťové karty): {g}.", { g: noNet.join(", ") })));
+        const noNet = [...new Set(el1.map((v) => v.net).filter((c) => !vlanUuid(c)))];
+        if (noNet.length) msgs.appendChild(mkEl("p", "dp-warn", "ℹ " + T("V tenantu chybí VLAN pro sítě (VM se vytvoří bez síťové karty): {g}.", { g: noNet.join(", ") })));
         dpbRender();
       }
       simUi = { id: u.id, update };
@@ -2280,7 +2263,7 @@ data:
     function docVmStart(u, vms, sim) {
       const nameOf = (list, id) => { const x = list && list.find((i) => i.uuid === id); return x ? x.name : ""; }, L = sim.lists || {};
       const d = { id: Date.now() + "-" + Math.floor(Math.random() * 1e4), kind: "vm", uc: u.id, ucName: u.name, t0: iso(Date.now()), t1: null, status: "running", seq0: sim.seq,
-        cfg: { prefix: deployCfg.prefix || u.id, image: deployCfg.imageName || deployCfg.image, imageId: deployCfg.image, vlans: Object.fromEntries([...new Set(vms.map((v) => v.net))].map((c) => [c, nameOf(L.vlans, deployCfg.vlans[c]) || deployCfg.vlans[c] || ""])), key: nameOf(L.keys, deployCfg.key) || deployCfg.key || "", start: !!deployCfg.start, concurrency: deployCfg.concurrency, failure: !!deployCfg.failure },
+        cfg: { prefix: deployCfg.prefix || u.id, image: deployCfg.imageName || deployCfg.image, imageId: deployCfg.image, vlans: Object.fromEntries([...new Set(vms.map((v) => v.net))].map((c) => [c, (L.vlans || []).some((x) => x.name === c) ? c : ""])), key: nameOf(L.keys, deployCfg.key) || deployCfg.key || "", start: !!deployCfg.start, concurrency: deployCfg.concurrency, failure: !!deployCfg.failure },
         vms: vms.map((v) => ({ name: v.name, role: v.role, smp: v.smp, cpu_mhz: v.cpu_mhz, mem_mib: Math.round(v.mem_bytes / 1048576), disk_gib: v.disk_gib, tier: v.disk_tier, status: "queued", uuid: "", disk: "", error: "" })), calls: [] };
       docsList.unshift(d); docsSave(); return d;
     }

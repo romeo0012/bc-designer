@@ -99,7 +99,7 @@ const SimCloud = (() => {
       failOn: null,                       // { vm: název VM, step: krok } - jednorázová simulovaná chyba tenantu
       sleep: (ms) => opt.sleep(ms / opt.speed),
       reset() { S = fresh(); api.failOn = null; },
-      restore(snap) { S = JSON.parse(JSON.stringify(snap)); api.failOn = null; },   // obnova uloženého stavu simulovaného cloudu
+      restore(snap) { S = JSON.parse(JSON.stringify(snap)); api.failOn = null; fresh().vlans.forEach((v) => { if (!(S.vlans || (S.vlans = [])).some((x) => x.name === v.name)) S.vlans.push(v); }); },   // obnova uloženého stavu simulovaného cloudu
       snapshot() { return JSON.parse(JSON.stringify(S)); },
       async request(method, path, o) {
         o = o || {}; const p = String(path).replace(/^\/+|\/+$/g, "").split("/"), [step, speedClass] = classify(method, p, o.params);
