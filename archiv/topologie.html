@@ -1,0 +1,333 @@
+<!doctype html>
+<html lang="cs">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Topologie infrastruktury</title>
+<style>
+  :root {
+    --bg: #f4f6fa; --panel: #ffffff; --panel-border: #d5dbe6; --text: #1b2433; --muted: #5d6a80;
+    --card: #f3f9ff; --card-border: #3b8ad9; --accent: #1f6feb; --danger: #c0392b; --ok: #2e7d32;
+    --warn-bg: #fff4e5; --warn-border: #d98a3b; --input-bg: #ffffff; --input-border: #b8c2d4;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0f1520; --panel: #182131; --panel-border: #2b3850; --text: #e6ebf5; --muted: #98a6c0;
+      --card: #12202f; --card-border: #3b7fc4; --accent: #5aa2ff; --danger: #ff7b6b; --ok: #6cc070;
+      --warn-bg: #2b2013; --warn-border: #b97a30; --input-bg: #0f1722; --input-border: #3a4a66;
+    }
+  }
+  * { box-sizing: border-box; }
+  nav.tabs { display: flex; gap: 4px; padding: 10px 24px 0; background: var(--panel); border-bottom: 1px solid var(--panel-border); }
+  nav.tabs a { padding: 8px 14px; text-decoration: none; color: var(--muted); border-bottom: 3px solid transparent; font-weight: 600; }
+  nav.tabs a.on { color: var(--text); border-bottom-color: var(--accent); }
+  body { margin: 0; font: 14px/1.4 system-ui, -apple-system, "Segoe UI", sans-serif; background: var(--bg); color: var(--text); }
+  header { padding: 16px 24px; display: flex; flex-wrap: wrap; gap: 12px 20px; align-items: center; border-bottom: 1px solid var(--panel-border); background: var(--panel); position: sticky; top: 0; z-index: 5; }
+  h1 { font-size: 18px; margin: 0; }
+  .spacer { flex: 1; }
+  button, select { font: inherit; padding: 6px 12px; border-radius: 6px; border: 1px solid var(--input-border); background: var(--input-bg); color: var(--text); cursor: pointer; }
+  button:hover { border-color: var(--accent); }
+  button.primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+  button.danger { color: var(--danger); }
+  .seg { display: inline-flex; }
+  .seg button { border-radius: 0; }
+  .seg button + button { border-left: 0; }
+  .seg button:first-child { border-radius: 6px 0 0 6px; }
+  .seg button:last-child { border-radius: 0 6px 6px 0; border-left: 0; }
+  .seg button.on { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .totals { display: flex; flex-wrap: wrap; gap: 8px 24px; padding: 10px 24px; background: var(--panel); border-bottom: 1px solid var(--panel-border); color: var(--muted); }
+  .totals b { color: var(--text); font-size: 16px; }
+  main { padding: 20px 24px 60px; display: flex; gap: 16px; overflow-x: auto; align-items: flex-start; }
+  .top { display: flex; gap: 12px; align-items: center; padding: 0 24px; margin-top: 16px; }
+  .pill { padding: 10px 28px; border: 2px solid var(--card-border); border-radius: 8px; font-weight: 700; letter-spacing: .08em; background: var(--card); }
+  .arrow { color: var(--muted); }
+  .zone { min-width: 270px; width: 270px; background: var(--panel); border: 1px solid var(--panel-border); border-radius: 10px; padding: 10px; flex: none; }
+  .zone-head { display: flex; align-items: center; gap: 6px; margin-bottom: 8px; }
+  .zone-head input { flex: 1; font-weight: 700; text-transform: uppercase; font-size: 12px; letter-spacing: .04em; border: 1px solid transparent; background: transparent; color: var(--muted); padding: 4px; border-radius: 4px; min-width: 0; }
+  .zone-head input:hover, .zone-head input:focus { border-color: var(--input-border); background: var(--input-bg); }
+  .vm { background: var(--card); border: 2px solid var(--card-border); border-radius: 8px; padding: 8px 10px; margin-bottom: 8px; }
+  .vm.dmz { background: var(--warn-bg); border-color: var(--warn-border); }
+  .vm .row1 { display: flex; gap: 6px; align-items: center; }
+  .vm .name { flex: 1; font-weight: 700; font-size: 15px; min-width: 0; border: 1px solid transparent; background: transparent; color: var(--text); padding: 2px 4px; border-radius: 4px; }
+  .vm .name:hover, .vm .name:focus { border-color: var(--input-border); background: var(--input-bg); }
+  .vm .role { color: var(--muted); font-size: 12px; padding: 0 4px; }
+  .fields { display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px 8px; margin-top: 6px; }
+  .fields label { display: flex; flex-direction: column; font-size: 11px; color: var(--muted); }
+  .fields input, .fields select { width: 100%; padding: 4px 6px; border: 1px solid var(--input-border); border-radius: 4px; background: var(--input-bg); color: var(--text); font: inherit; font-size: 13px; }
+  .note { margin-top: 6px; font-size: 11px; color: var(--muted); }
+  .x { padding: 0 6px; line-height: 1.4; }
+  .warn { color: var(--warn-border); font-size: 11px; margin-top: 4px; }
+  .add { width: 100%; border-style: dashed; color: var(--muted); }
+  .zone-add { min-width: 120px; align-self: flex-start; border-style: dashed; padding: 14px; color: var(--muted); }
+  footer { padding: 0 24px 24px; color: var(--muted); font-size: 12px; }
+  .toast { position: fixed; bottom: 16px; right: 16px; background: var(--ok); color: #fff; padding: 8px 14px; border-radius: 6px; opacity: 0; transition: opacity .3s; pointer-events: none; }
+  .toast.show { opacity: 1; }
+</style>
+</head>
+<body>
+<nav class="tabs">
+  <a id="nav-top" href="#" class="on">Topologie</a>
+  <a id="nav-uc" href="#">Use case</a>
+</nav>
+<header>
+  <h1>Topologie infrastruktury</h1>
+  <div class="seg" role="group" aria-label="Varianta">
+    <button id="m-cur" type="button">Současný stav</button>
+    <button id="m-rec" type="button">Doporučený sizing</button>
+    <button id="m-uc" type="button">Sizing dle use case</button>
+  </div>
+  <select id="uc-sel" aria-label="Use case" hidden></select>
+  <span class="spacer"></span>
+  <button id="exp" type="button">Export JSON</button>
+  <button id="imp" type="button">Import JSON</button>
+  <button id="rst" type="button" class="danger">Reset</button>
+  <input id="file" type="file" accept="application/json" hidden>
+</header>
+<div class="totals" id="totals"></div>
+<div class="top">
+  <div class="pill">INTERNET</div><span class="arrow">&#8594; WAN (Public IP) &#8594;</span>
+</div>
+<main id="zones"></main>
+<footer>Změny se ukládají do prohlížeče (localStorage) pro každou variantu zvlášť. V záložce „Sizing dle use case“ se změny ukládají do vybraného use case a sdílejí se se stránkou Use case. Pro sdílení použijte Export JSON.</footer>
+<div class="toast" id="toast">Uloženo</div>
+
+<script>
+// základní cesta se odvodí z URL (funguje pod /hackaithon i na /)
+(function () { var b = location.pathname.replace(/\/[^\/]*\.html$/, "").replace(/\/$/, "") + "/";
+  document.write('<script src="' + b + 'usecases.js"><\/script>'); })();
+</script>
+<script>
+const DISK = ["Standard", "Fast", "Super Fast"];
+// c = současný stav (CPU v poli c se nepoužívá, bere se z CUR_GHZ), r = doporučení best practice;
+// hodnoty: [vCPU, RAM GiB, disk GB, třída disku]. U doporučení se CPU přepočítá na GHz = vCPU x 2,5.
+// Rozsahy z doporučení (např. 2-4 vCPU) jsou zde brány jako spodní mez.
+const DEFAULT = {
+  zones: [
+    { name: "DMZ", vms: [
+      { name: "firewall", role: "Bezpečnost", count: 1,
+        c: [4, 4, 20, "Standard"], r: [4, 8, 40, "Standard"], rc: 2,
+        note: "Jediný bod výpadku v DMZ, doporučen HA pár." } ]},
+    { name: "Kubernetes (aplikace + control plane)", vms: [
+      { name: "etcd", role: "Aplikační", count: 3,
+        c: [1, 4, 100, "Standard"], r: [4, 8, 50, "Fast"],
+        note: "etcd je citlivý na latenci fsync. Při společném běhu s API serverem počítat 4 vCPU / 16 GiB." },
+      { name: "worker", role: "Aplikační", count: 5,
+        c: [8, 32, 300, "Standard"], r: [8, 32, 150, "Standard"],
+        note: "Nechat rezervu pro výpadek jednoho nodu (N+1)." } ]},
+    { name: "Databázové", vms: [
+      { name: "postgres-01", role: "Databázové", count: 1,
+        c: [4, 32, 500, "Fast"], r: [8, 32, 500, "Fast"], rc: 2,
+        note: "Přidat repliku (např. Patroni), WAL na zvláštní disk." },
+      { name: "redis-01", role: "Databázové", count: 1,
+        c: [8, 16, 300, "Fast"], r: [2, 16, 50, "Fast"], rc: 2,
+        note: "Redis je převážně single-threaded; maxmemory max 50-60 % RAM." } ]},
+    { name: "Storage, monitoring & logging", vms: [
+      { name: "nfs-storage", role: "Provozní", count: 1,
+        c: [8, 16, 2000, "Super Fast"], r: [4, 16, 2000, "Fast"] },
+      { name: "prometheus", role: "Provozní", count: 1,
+        c: [4, 16, 500, "Super Fast"], r: [4, 16, 500, "Fast"],
+        note: "Disk podle retence (~1-2 B na vzorek)." },
+      { name: "grafana", role: "Provozní", count: 1,
+        c: [2, 8, 100, "Super Fast"], r: [2, 4, 50, "Standard"] },
+      { name: "elk-kibana", role: "Provozní", count: 1,
+        c: [8, 32, 2000, "Super Fast"], r: [8, 32, 2000, "Fast"],
+        note: "Cíl: 3 ES nody + zvlášť Kibana. Single node má replicas=0." },
+      { name: "backup", role: "Provozní", count: 1,
+        c: [4, 8, 5000, "Super Fast"], r: [4, 8, 5000, "Standard"],
+        note: "Pravidlo 3-2-1, offsite kopie, testovat obnovu." },
+      { name: "keycloak", role: "Provozní", count: 1,
+        c: [3, 2, 50, "Standard"], r: [2, 4, 30, "Standard"], rc: 2 },
+      { name: "vault", role: "Provozní", count: 1,
+        c: [3, 2, 50, "Standard"], r: [2, 8, 50, "Fast"], rc: 3,
+        note: "Raft cluster, 3 nody, rychlý disk." } ]},
+    { name: "CI/CD", vms: [
+      { name: "gitlab", role: "Vývojové", count: 1,
+        c: [3, 2, 50, "Standard"], r: [4, 16, 200, "Fast"],
+        note: "2 GiB je pod minimem (8 GiB). Runnery na zvláštní VM." },
+      { name: "argo-cd", role: "Vývojové", count: 1,
+        c: [3, 2, 50, "Standard"], r: [2, 4, 30, "Standard"],
+        note: "V clusteru už běží namespace argocd, VM je nejspíš zbytečná." },
+      { name: "sonar", role: "Vývojové", count: 1,
+        c: [3, 2, 50, "Standard"], r: [4, 8, 100, "Fast"] },
+      { name: "nexus", role: "Vývojové", count: 1,
+        c: [3, 2, 50, "Standard"], r: [4, 16, 500, "Standard"],
+        note: "Nastavit cleanup politiky pro Docker image." } ]}
+  ]
+};
+
+let mode = "r";
+let data;
+const $ = (id) => document.getElementById(id);
+const key = (m) => "topologie-v2-" + m;
+
+const GHZ_PER_VCPU = 2.5;
+// Současný stav: CPU v GHz přesně podle obrázku topologie (ostatní hodnoty z pole c).
+const CUR_GHZ = { firewall: 10, etcd: 2, worker: 21, "postgres-01": 10, "redis-01": 20, "nfs-storage": 21,
+  prometheus: 10, grafana: 5, "elk-kibana": 21, backup: 10, keycloak: 7, vault: 7, gitlab: 7, "argo-cd": 7, sonar: 7, nexus: 7 };
+
+// Sizing dle use case: výběr a úpravy sdílí stránka use-case.html (localStorage, stejný origin).
+const VARIANT = { c: "soucasny", r: "doporuceny", u: "usecase" };
+function ucId() {
+  try { const s = JSON.parse(localStorage.getItem("usecase-state")); if (s && UC.some(u => u.id === s.id)) return s.id; } catch (e) {}
+  return UC[0].id;
+}
+function ucDefaults(id) {
+  return UC.find(u => u.id === id).parts.map(p => ({ name: p[0], role: p[1], count: p[2], ghz: p[3] * GHZ_PER_VCPU, ram: p[4], disk: p[5], tier: p[6], note: p[7] || "" }));
+}
+function ucData(useSaved) {
+  const id = ucId(); let vms = null;
+  if (useSaved) { try { const s = JSON.parse(localStorage.getItem("usecase-v1-" + id)); if (Array.isArray(s)) vms = s; } catch (e) {} }
+  return { zones: [{ name: "Use case: " + UC.find(u => u.id === id).name, vms: vms || ucDefaults(id) }] };
+}
+
+function build(m) {
+  if (m === "u") return ucData(false);
+  // Rozbalí výchozí data do plochého tvaru pro zvolenou variantu.
+  // Doporučení: GHz = vCPU (best practice) x 2,5 GHz.
+  return { zones: DEFAULT.zones.map(z => ({
+    name: z.name,
+    vms: z.vms.map(v => {
+      const a = m === "c" ? v.c : v.r;
+      const cnt = m === "r" && v.rc ? v.rc : v.count;
+      const ghz = m === "c" ? (CUR_GHZ[v.name] ?? a[0] * GHZ_PER_VCPU) : a[0] * GHZ_PER_VCPU;
+      return { name: v.name, role: v.role, count: cnt, ghz: ghz, ram: a[1], disk: a[2], tier: a[3], note: v.note || "" };
+    })
+  })) };
+}
+
+function load(m) {
+  if (m === "u") return ucData(true);
+  try {
+    const s = localStorage.getItem(key(m));
+    if (s) { const d = JSON.parse(s); if (d && Array.isArray(d.zones)) return d; }
+  } catch (e) {}
+  return build(m);
+}
+function save() {
+  try {
+    if (mode === "u") localStorage.setItem("usecase-v1-" + ucId(), JSON.stringify(data.zones[0].vms));
+    else localStorage.setItem(key(mode), JSON.stringify(data));
+  } catch (e) {}
+  const t = $("toast"); t.classList.add("show"); clearTimeout(save.t); save.t = setTimeout(() => t.classList.remove("show"), 700);
+}
+const num = (v, d) => { const n = parseFloat(v); return isFinite(n) && n >= 0 ? n : d; };
+const fmt = (n) => n.toLocaleString("cs-CZ", { maximumFractionDigits: 1 });
+const fmtGb = (gb) => gb >= 1000 ? fmt(gb / 1000) + " TB" : fmt(gb) + " GB";
+
+function totals() {
+  let vm = 0, cpu = 0, ram = 0, disk = 0;
+  data.zones.forEach(z => z.vms.forEach(v => { vm += v.count; cpu += v.count * v.ghz; ram += v.count * v.ram; disk += v.count * v.disk; }));
+  $("totals").innerHTML = `<span>VM celkem <b>${fmt(vm)}</b></span><span>CPU <b>${fmt(cpu)} GHz</b> <small>(≈ ${fmt(cpu / GHZ_PER_VCPU)} vCPU)</small></span><span>RAM <b>${fmt(ram)} GiB</b></span><span>Disk <b>${fmtGb(disk)}</b></span>`;
+}
+
+function field(label, type, val, onchange, extra) {
+  const l = document.createElement("label"); l.textContent = label;
+  const i = document.createElement("input"); i.type = type; i.value = val; i.min = 0; i.step = "any";
+  i.addEventListener("change", () => onchange(i.value)); if (extra) extra(i);
+  l.appendChild(i); return l;
+}
+
+function render() {
+  $("m-cur").classList.toggle("on", mode === "c");
+  $("m-rec").classList.toggle("on", mode === "r");
+  $("m-uc").classList.toggle("on", mode === "u");
+  $("uc-sel").hidden = mode !== "u";
+  if (mode === "u") $("uc-sel").value = ucId();
+  const root = $("zones"); root.innerHTML = "";
+  data.zones.forEach((z, zi) => {
+    const zEl = document.createElement("section"); zEl.className = "zone";
+    const head = document.createElement("div"); head.className = "zone-head";
+    const zn = document.createElement("input"); zn.value = z.name; zn.setAttribute("aria-label", "Název zóny");
+    zn.addEventListener("change", () => { z.name = zn.value; save(); });
+    const zx = document.createElement("button"); zx.className = "x danger"; zx.textContent = "×"; zx.title = "Smazat zónu";
+    zx.addEventListener("click", () => { if (confirm("Smazat zónu " + z.name + " včetně VM?")) { data.zones.splice(zi, 1); save(); render(); } });
+    if (mode === "u") { zn.disabled = true; zx.hidden = true; }
+    head.append(zn, zx); zEl.appendChild(head);
+
+    z.vms.forEach((v, vi) => {
+      const el = document.createElement("div"); el.className = "vm" + (/^dmz$/i.test(z.name) ? " dmz" : "");
+      const r1 = document.createElement("div"); r1.className = "row1";
+      const nm = document.createElement("input"); nm.className = "name"; nm.value = v.name; nm.setAttribute("aria-label", "Název VM");
+      nm.addEventListener("change", () => { v.name = nm.value; save(); });
+      const x = document.createElement("button"); x.className = "x danger"; x.textContent = "×"; x.title = "Smazat VM";
+      x.addEventListener("click", () => { z.vms.splice(vi, 1); save(); render(); });
+      r1.append(nm, x);
+      const role = document.createElement("input"); role.className = "role"; role.value = v.role; role.style.cssText = "border:1px solid transparent;background:transparent;width:100%";
+      role.addEventListener("change", () => { v.role = role.value; save(); });
+      const f = document.createElement("div"); f.className = "fields";
+      f.append(
+        field("Počet", "number", v.count, x => { v.count = Math.max(1, Math.round(num(x, 1))); save(); render(); }),
+        field("CPU (GHz)", "number", v.ghz, x => { v.ghz = num(x, v.ghz); save(); render(); }),
+        field("RAM (GiB)", "number", v.ram, x => { v.ram = num(x, v.ram); save(); totals(); }),
+        field("Disk (GB)", "number", v.disk, x => { v.disk = num(x, v.disk); save(); totals(); })
+      );
+      const tl = document.createElement("label"); tl.textContent = "Třída disku";
+      const sel = document.createElement("select");
+      DISK.forEach(d => { const o = document.createElement("option"); o.textContent = d; if (d === v.tier) o.selected = true; sel.appendChild(o); });
+      sel.addEventListener("change", () => { v.tier = sel.value; save(); });
+      tl.appendChild(sel); f.appendChild(tl);
+      el.append(r1, role, f);
+      const eq = document.createElement("div"); eq.className = "note"; eq.textContent = `≈ ${fmt(v.ghz / GHZ_PER_VCPU)} vCPU (při ${GHZ_PER_VCPU} GHz na vCPU)`; el.appendChild(eq);
+      if (v.count > 1) { const c = document.createElement("div"); c.className = "note"; c.textContent = `×${v.count}: ${fmt(v.count * v.ghz)} GHz, ${fmt(v.count * v.ram)} GiB, ${fmtGb(v.count * v.disk)}`; el.appendChild(c); }
+      if (v.note) { const n = document.createElement("div"); n.className = "note"; n.textContent = v.note; el.appendChild(n); }
+      if (v.ghz < 2 * GHZ_PER_VCPU || v.ram < 4) { const w = document.createElement("div"); w.className = "warn"; w.textContent = "⚠ Málo zdrojů: pod 5 GHz (2 vCPU) nebo 4 GiB RAM"; el.appendChild(w); }
+      zEl.appendChild(el);
+    });
+
+    const add = document.createElement("button"); add.className = "add"; add.textContent = "+ Přidat VM";
+    add.addEventListener("click", () => { z.vms.push({ name: "nova-vm", role: "Provozní", count: 1, ghz: 5, ram: 4, disk: 50, tier: "Standard", note: "" }); save(); render(); });
+    zEl.appendChild(add); root.appendChild(zEl);
+  });
+  const za = document.createElement("button"); za.className = "zone-add"; za.textContent = "+ Přidat zónu";
+  za.addEventListener("click", () => { data.zones.push({ name: "Nová zóna", vms: [] }); save(); render(); });
+  if (mode !== "u") root.appendChild(za);
+  totals();
+}
+
+function setMode(m) { mode = m; data = load(m); render(); }
+$("m-cur").addEventListener("click", () => setMode("c"));
+$("m-rec").addEventListener("click", () => setMode("r"));
+$("m-uc").addEventListener("click", () => setMode("u"));
+if (typeof UC !== "undefined") {
+  UC.forEach(u => { const o = document.createElement("option"); o.value = u.id; o.textContent = u.name; $("uc-sel").appendChild(o); });
+} else { $("m-uc").disabled = true; $("m-uc").title = "Data use case se nepodařilo načíst"; }
+$("uc-sel").addEventListener("change", () => {
+  let s = null; try { s = JSON.parse(localStorage.getItem("usecase-state")); } catch (e) {}
+  s = Object.assign({ mode: "biz" }, s, { id: $("uc-sel").value });
+  try { localStorage.setItem("usecase-state", JSON.stringify(s)); } catch (e) {}
+  setMode("u");
+});
+$("rst").addEventListener("click", () => {
+  if (!confirm("Vrátit tuto variantu na výchozí hodnoty?")) return;
+  try { localStorage.removeItem(key(mode)); if (mode === "u") localStorage.removeItem("usecase-v1-" + ucId()); } catch (e) {}
+  data = build(mode); render();
+});
+$("exp").addEventListener("click", () => {
+  const b = new Blob([JSON.stringify({ varianta: VARIANT[mode], ...data }, null, 2)], { type: "application/json" });
+  const a = document.createElement("a"); a.href = URL.createObjectURL(b); a.download = "topologie-" + VARIANT[mode] + ".json"; a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+});
+$("imp").addEventListener("click", () => $("file").click());
+$("file").addEventListener("change", (e) => {
+  const f = e.target.files[0]; if (!f) return;
+  const r = new FileReader();
+  r.onload = () => {
+    try {
+      const d = JSON.parse(r.result);
+      if (!d || !Array.isArray(d.zones)) throw new Error("chybí pole zones");
+      d.zones.forEach(z => { if (!Array.isArray(z.vms)) throw new Error("zóna bez vms"); });
+      d.zones.forEach(z => z.vms.forEach(v => { if (v.ghz === undefined && v.vcpu !== undefined) v.ghz = v.vcpu * GHZ_PER_VCPU; }));
+      data = { zones: d.zones }; save(); render();
+    } catch (err) { alert("Neplatný soubor: " + err.message); }
+  };
+  r.readAsText(f); e.target.value = "";
+});
+// navigace: základní cesta se odvodí z URL (funguje pod /hackaithon i na /)
+(function () {
+  const base = location.pathname.replace(/\/[^\/]*\.html$/, "").replace(/\/$/, "") + "/";
+  $("nav-top").href = base; $("nav-uc").href = base + "use-case.html";
+})();
+setMode("r");
+</script>
+</body>
+</html>

@@ -1,0 +1,1650 @@
+<!doctype html>
+<html lang="cs">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Business Cloud Solution Designer</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 315 385'%3E%3Cpath fill='%23e20074' d='M0 0H315V130H289C289 60 245 25 210 25V345C210 362 230 364 250 372V385H63V372C90 364 122 362 122 345V25C70 25 26 60 26 130H0ZM0 175H77V252H0ZM238 175H315V252H238Z'/%3E%3C/svg%3E">
+<style>
+  :root {
+    --bg: #f4f6fa; --panel: #ffffff; --border: #d5dbe6; --text: #1b2433; --muted: #5d6a80;
+    --accent: #e20074; --accent-soft: #fde8f2; --accent-text: #ffffff;
+    --vm-bg: #f3f9ff; --vm-border: #3b8ad9;
+    --info-bg: #eaf1fb; --input-bg: #ffffff; --input-border: #b8c2d4; --danger: #c0392b; --ok: #2e7d32; --warn: #b9650a;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0f1520; --panel: #182131; --border: #2b3850; --text: #e6ebf5; --muted: #98a6c0;
+      --accent: #e20074; --accent-soft: #3a1a2e; --accent-text: #ffffff;
+      --vm-bg: #12202f; --vm-border: #3b7fc4;
+      --info-bg: #14253b; --input-bg: #0f1722; --input-border: #3a4a66; --danger: #ff7b6b; --ok: #6cc070; --warn: #f0a050;
+    }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; font: 14px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif; background: var(--bg); color: var(--text); }
+  .brand { color-scheme: light; background: #fff; border-bottom: 1px solid #f2d3e3;
+    --panel: #ffffff; --text: #1b2433; --border: #d5dbe6; --muted: #5d6a80; --accent: #e20074; --accent-text: #ffffff; --input-bg: #fff; --input-border: #b8c2d4; }
+  .brand-ctl { display: flex; justify-content: flex-end; align-items: center; gap: 10px; padding: 10px 24px 0; }
+  .brand-img { display: block; width: 100%; height: auto; max-height: 190px; object-fit: cover; object-position: center; }
+  .topbar { display: flex; justify-content: flex-end; align-items: center; gap: 10px; padding: 12px 24px 0; }
+  .cur { display: inline-flex; padding: 2px; border: 1px solid var(--border); border-radius: 999px; background: var(--panel); }
+  .cur button { border: 0; background: transparent; color: var(--text); font: inherit; font-size: 13px; font-weight: 700; padding: 5px 11px; border-radius: 999px; cursor: pointer; }
+  .cur button.on { background: var(--accent); color: var(--accent-text); }
+  .lang-btn { display: inline-flex; align-items: center; gap: 8px; font: inherit; font-weight: 700; padding: 5px 12px; border: 1px solid var(--border); border-radius: 999px; background: var(--panel); color: var(--text); cursor: pointer; }
+  .lang-btn:hover { border-color: var(--accent); }
+  .lang-btn svg { display: block; height: 16px; width: auto; border-radius: 2px; box-shadow: 0 0 0 1px rgba(0,0,0,.2); }
+  .wrap { max-width: 1480px; margin: 0 auto; padding: 12px 24px 24px; }
+  .head { display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-start; justify-content: space-between; }
+  h2 { margin: 0 0 4px; font-size: 20px; }
+  h3 { margin: 0 0 8px; font-size: 16px; }
+  .sub { color: var(--muted); margin: 0; max-width: 520px; }
+  .toggle { display: inline-flex; background: var(--panel); border: 1px solid var(--border); border-radius: 999px; padding: 3px; }
+  .toggle button { border: 0; background: transparent; color: var(--text); padding: 7px 18px; border-radius: 999px; font: inherit; font-weight: 600; cursor: pointer; }
+  .toggle button.on { background: var(--accent); color: var(--accent-text); }
+  .tile.hint-tile { background: var(--info-bg); cursor: default; }
+  .hint-logo { font-size: 44px !important; border: 0; background: none; cursor: pointer; padding: 0; margin-bottom: 6px !important; }
+  .tile.hint-tile button#cmpbtn { margin-top: 6px; padding: 0; border: 0; background: none; color: var(--accent); font: inherit; cursor: pointer; text-decoration: underline; }
+  .hint { background: var(--info-bg); border: 1px solid var(--border); border-radius: 8px; padding: 10px 14px; max-width: 320px; }
+  .hint b { display: block; }
+  .hint button { margin-top: 4px; padding: 0; border: 0; background: none; color: var(--accent); font: inherit; cursor: pointer; text-decoration: underline; }
+  .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin: 20px 0; }
+  @media (max-width: 640px) { .grid { grid-template-columns: repeat(2, 1fr); } }
+  .tile { display: flex; flex-direction: column; align-items: center; justify-content: flex-start; text-align: center; background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 16px 10px; cursor: pointer; font: inherit; color: var(--text); position: relative; }
+  .tile:hover { border-color: var(--accent); }
+  .tile[aria-pressed="true"] { border: 2px solid var(--accent); background: var(--accent-soft); padding: 15px 9px; }
+  .tile .ic { font-size: 28px; line-height: 1; display: block; margin-bottom: 8px; }
+  .tile b { display: block; font-size: 15px; }
+  .tile span.d { display: block; color: var(--muted); font-size: 12px; margin-top: 4px; }
+  .tile .i { position: absolute; top: 8px; right: 8px; width: 18px; height: 18px; border-radius: 50%; border: 1px solid var(--accent); color: var(--accent); font-size: 11px; line-height: 16px; text-align: center; font-weight: 700; }
+  .panel { background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 18px 20px; margin-bottom: 20px; }
+  .stats { display: flex; flex-wrap: wrap; gap: 12px; margin: 14px 0; }
+  .stat { flex: 1 1 140px; border: 1px solid var(--border); border-radius: 8px; padding: 10px 14px; }
+  .stat small { display: block; color: var(--muted); }
+  .stat b { font-size: 20px; }
+  .badge { display: inline-block; padding: 2px 10px; border-radius: 999px; font-size: 12px; font-weight: 700; background: var(--accent-soft); color: var(--accent); }
+  ul.parts { margin: 8px 0 0; padding-left: 20px; }
+  ul.parts li { margin: 3px 0; }
+  table { width: 100%; border-collapse: collapse; }
+  th, td { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+  th { color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: .03em; }
+  td input, td select { width: 100%; min-width: 60px; padding: 4px 6px; border: 1px solid var(--input-border); border-radius: 4px; background: var(--input-bg); color: var(--text); font: inherit; }
+  td.num input { max-width: 66px; }
+  #detail table tbody td:nth-child(1) { min-width: 118px; }
+  #detail table tbody td:nth-child(2) { min-width: 250px; }
+  #detail table tbody td:nth-child(7) { min-width: 104px; }
+  #detail table th, #detail table td { padding: 6px 5px; }
+  tfoot td { font-weight: 700; border-bottom: 0; }
+  .tablewrap { overflow-x: auto; }
+  button.btn { font: inherit; padding: 6px 12px; border-radius: 6px; border: 1px solid var(--input-border); background: var(--input-bg); color: var(--text); cursor: pointer; }
+  button.btn:hover { border-color: var(--accent); }
+  button.btn.danger { color: var(--danger); }
+  .actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+  .muted { color: var(--muted); }
+  .note { font-size: 12px; color: var(--muted); }
+  .ha-yes { color: var(--ok); font-weight: 600; }
+  .ha-no { color: var(--warn); font-weight: 600; }
+  .cmp tr.sel td { background: var(--accent-soft); }
+  .cmp tr { cursor: pointer; }
+  body { padding-bottom: 72px; }
+  button.btn.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-text); font-weight: 600; }
+  .req { position: fixed; right: 16px; bottom: 16px; z-index: 50; display: flex; flex-direction: column; align-items: flex-end; gap: 10px; max-width: calc(100vw - 32px); }
+  .req-fab { font: inherit; font-weight: 700; padding: 11px 18px; border-radius: 999px; border: 0; cursor: pointer; background: var(--accent); color: var(--accent-text); box-shadow: 0 4px 16px rgba(0,0,0,.3); }
+  .req-panel { width: min(400px, calc(100vw - 32px)); max-height: calc(100vh - 100px); overflow-y: auto; background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 14px 16px; box-shadow: 0 8px 28px rgba(0,0,0,.35); }
+  .req-panel[hidden] { display: none; }
+  .req-head { display: flex; align-items: center; gap: 8px; }
+  .req-head b { flex: 1; font-size: 15px; }
+  .req-head button { border: 0; background: none; color: var(--muted); font-size: 20px; line-height: 1; cursor: pointer; padding: 0 4px; }
+  .req-panel textarea { width: 100%; min-height: 96px; resize: vertical; margin: 8px 0; padding: 8px 10px; border: 1px solid var(--input-border); border-radius: 8px; background: var(--input-bg); color: var(--text); font: inherit; }
+  .req-ex { display: flex; flex-direction: column; gap: 4px; margin-bottom: 8px; }
+  .req-ex button { text-align: left; font: inherit; font-size: 12px; padding: 4px 8px; border: 1px dashed var(--border); border-radius: 6px; background: none; color: var(--muted); cursor: pointer; }
+  .req-ex button:hover { border-color: var(--accent); color: var(--text); }
+  .req-out { margin-top: 12px; font-size: 13px; }
+  .req-out ul { margin: 4px 0 8px; padding-left: 18px; }
+  .req-msg { margin: 0 0 8px; padding: 8px 10px; border-radius: 6px; background: var(--accent-soft); }
+  .req-panel details { margin-top: 10px; font-size: 12px; color: var(--muted); }
+  .req-panel summary { cursor: pointer; }
+  .req-brief { margin: 8px 0 0; padding: 8px 12px; border: 1px solid var(--border); border-radius: 8px; background: var(--info-bg); }
+  .req-applied { margin: 6px 0 0; padding: 6px 10px; border-left: 3px solid var(--accent); background: var(--accent-soft); border-radius: 0 6px 6px 0; font-size: 12px; }
+  tr.grp td { background: var(--bg); font-weight: 700; padding-top: 12px; border-bottom: 1px solid var(--border); }
+  tr.grp.hl td { background: var(--accent-soft); color: var(--accent); border-bottom-color: var(--accent); }
+  tr.grp small { font-weight: 400; color: var(--muted); margin-left: 10px; }
+  tr.hl-row td { background: color-mix(in srgb, var(--accent-soft) 45%, transparent); }
+  tr.hl-row td:first-child { box-shadow: inset 3px 0 0 var(--accent); }
+  tr.shared-row input:disabled, tr.shared-row select:disabled { opacity: .75; cursor: not-allowed; }
+  .deploy { margin-top: 14px; }
+  .dp-form { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 10px 18px; margin: 4px 0 8px; align-items: start; }
+  .dp-form label { display: flex; flex-direction: column; gap: 3px; font-weight: 600; font-size: 13px; }
+  .dp-form input[type=text], .dp-form input:not([type]), .dp-form textarea { padding: 6px 9px; border: 1px solid var(--input-border); border-radius: 6px; background: var(--input-bg); color: var(--text); font: inherit; font-weight: 400; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12.5px; }
+  .dp-check { flex-direction: row !important; align-items: center; gap: 6px; font-weight: 600; }
+  .dp-sum { margin: 12px 0 6px; font-weight: 600; }
+  .dp-err { margin: 4px 0; padding: 6px 10px; border-left: 3px solid var(--danger); background: color-mix(in srgb, var(--danger) 12%, transparent); border-radius: 0 6px 6px 0; }
+  .dp-warn { margin: 4px 0; padding: 6px 10px; border-left: 3px solid var(--warn); background: color-mix(in srgb, var(--warn) 12%, transparent); border-radius: 0 6px 6px 0; font-size: 13px; }
+  .dp-ok { margin: 8px 0 4px; padding: 6px 10px; border-left: 3px solid var(--ok); background: color-mix(in srgb, var(--ok) 12%, transparent); border-radius: 0 6px 6px 0; }
+  .dp-go { margin-top: 12px; padding: 10px 18px; font-size: 15px; }
+  .dp-go:disabled { opacity: .5; cursor: not-allowed; }
+  aside[hidden] { display: none !important; }
+  .dp-imgfield { display: flex; flex-direction: column; gap: 3px; font-size: 13px; }
+  .dp-lbl { font-weight: 600; }
+  .dp-imgshow { padding: 6px 9px; border: 1px solid var(--input-border); border-radius: 6px; background: var(--input-bg); font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12.5px; word-break: break-all; }
+  .dp-imgbtn { align-self: flex-start; }
+  .dp-pick { margin: 4px 0 10px; padding: 12px 14px; border: 1px solid var(--accent); border-radius: 8px; background: var(--info-bg); }
+  .dp-pick[hidden] { display: none; }
+  .dp-search { width: 100%; padding: 6px 9px; margin: 4px 0 8px; border: 1px solid var(--input-border); border-radius: 6px; background: var(--input-bg); color: var(--text); font: inherit; }
+  .dp-imglist { max-height: 230px; overflow-y: auto; display: flex; flex-direction: column; gap: 4px; }
+  .dp-imgitem { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; padding: 7px 10px; border: 1px solid var(--border); border-radius: 6px; background: var(--panel); color: var(--text); font: inherit; cursor: pointer; text-align: left; }
+  .dp-imgitem:hover { border-color: var(--accent); }
+  .dp-imgitem.on { border-color: var(--accent); background: var(--accent-soft); }
+  .dp-imgitem small { color: var(--muted); white-space: nowrap; }
+  .dp-row { padding: 3px 12px; }
+  .dp-row:disabled { opacity: .45; cursor: not-allowed; }
+  .trk-chip { padding: 2px 10px; border-radius: 999px; font-size: 12px; font-weight: 700; background: var(--border); color: var(--text); }
+  .trk-chip[data-s="running"], #trk-fab[data-s="running"] { background: var(--accent); color: var(--accent-text); }
+  .trk-chip[data-s="ok"] { background: var(--ok); color: #fff; }
+  .trk-chip[data-s="failed"], .trk-chip[data-s="cancelled"], .trk-chip[data-s="stopped"] { background: var(--danger); color: #fff; }
+  .trk-bar { height: 8px; margin: 10px 0 0; background: var(--border); border-radius: 999px; overflow: hidden; }
+  .trk-bar i { display: block; height: 100%; width: 0; background: var(--accent); transition: width .3s; }
+  .trk-steps { grid-column: 1 / -1; display: flex; gap: 4px; }
+  .trk-dot { flex: 1; height: 8px; border-radius: 999px; background: var(--border); }
+  .trk-dot.s-ok { background: var(--ok); }
+  .trk-dot.s-failed { background: var(--danger); }
+  .trk-dot.s-running { background: var(--accent); animation: trkpulse 1s ease-in-out infinite; }
+  .trk-dot.s-skipped { background: transparent; border: 1px dashed var(--muted); }
+  @keyframes trkpulse { 50% { opacity: .35; } }
+  @media (prefers-reduced-motion: reduce) { .trk-dot.s-running { animation: none; } }
+  .bgrp { margin-top: 10px; padding: 8px 14px; border: 1px solid var(--border); border-radius: 8px; }
+  .bgrp.hl { background: var(--accent-soft); border-color: var(--accent); }
+  .bgrp-h { font-weight: 700; }
+  .bgrp.hl .bgrp-h { color: var(--accent); }
+  .bgrp-h small { font-weight: 400; color: var(--muted); margin: 0 8px 0 4px; }
+  #detail thead th:nth-child(n+8):nth-child(-n+13) { text-align: right; }
+  td.pr { text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; font-size: 13px; }
+  td.pr-total { font-weight: 700; }
+  .pr-sub { display: block; color: var(--muted); font-size: 11px; font-weight: 400; letter-spacing: 0; text-transform: none; white-space: nowrap; }
+  tfoot td { text-align: left; white-space: nowrap; }
+  tfoot td:nth-child(n+7) { text-align: right; }
+  .pricing { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 28px; margin: 14px 0 12px; padding: 10px 14px; border: 1px solid var(--border); border-radius: 8px; background: var(--info-bg); }
+  .pricing label { display: flex; align-items: center; gap: 8px; font-weight: 600; }
+  .pricing select { font: inherit; padding: 4px 8px; border: 1px solid var(--input-border); border-radius: 6px; background: var(--input-bg); color: var(--text); }
+  .pricing input[type=range] { width: 150px; accent-color: var(--accent); }
+  .pricing label b { min-width: 42px; }
+  .pricing .note { flex-basis: 100%; margin: 0; }
+  .pr-big { font-size: 20px; } .pr-big b { font-size: 26px; }
+  .pr-g-cl { flex-direction: column; align-items: flex-start; }
+  .pricing { align-items: stretch; }
+  .pr-group { flex: 1 1 340px; }
+  .pr-g-tot { align-content: center; }
+  .pr-sliders { display: flex; flex-wrap: wrap; gap: 8px 28px; }
+  .pr-group { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 20px; padding: 6px 12px; border: 1px solid var(--border); border-radius: 8px; background: var(--panel); }
+  .pr-sum { display: flex; flex-wrap: wrap; gap: 6px 18px; }
+  .pr-chip { font-size: 13px; color: var(--muted); }
+  .pr-chip b { color: var(--text); }
+  .sim-legend { display: flex; flex-wrap: wrap; gap: 6px 16px; margin: 12px 0 2px; font-size: 12.5px; }
+  .sim-key { display: inline-flex; align-items: center; gap: 6px; }
+  .sim-sw { width: 14px; height: 14px; border-radius: 4px; border: 2px solid; display: inline-block; }
+  .sim-sw.st-planned { border-color: var(--vm-border); background: var(--vm-bg); }
+  .sim-sw.st-queued { border-color: var(--vm-border); border-style: dashed; background: transparent; }
+  .sim-sw.st-deploying { border-color: var(--warn); background: color-mix(in srgb, var(--warn) 30%, transparent); }
+  .sim-sw.st-deployed { border-color: var(--ok); background: color-mix(in srgb, var(--ok) 30%, transparent); }
+  .sim-sw.st-failed { border-color: var(--danger); background: color-mix(in srgb, var(--danger) 30%, transparent); }
+  .sim-sw.st-excluded { border-color: var(--muted); border-style: dashed; opacity: .5; }
+  .sim-topo { margin: 14px 0 6px; }
+  .sim-top { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+  .sim-internet, .sim-wan { padding: 8px 22px; border: 2px solid var(--vm-border); border-radius: 8px; background: var(--vm-bg); font-weight: 700; letter-spacing: .08em; }
+  .sim-wan { border-style: dashed; border-color: var(--ok); color: var(--ok); }
+  .sim-arrow { color: var(--muted); }
+  .sim-cols { display: flex; gap: 14px; overflow-x: auto; align-items: flex-start; padding-bottom: 8px; }
+  .sim-col { flex: 0 0 280px; }
+  .hl-topo .sim-cols { flex-wrap: wrap; align-items: stretch; overflow: visible; }
+  .hl-topo .sim-col { min-width: 0; display: flex; flex-direction: column; } .hl-topo .sim-tab { align-self: flex-start; }
+  .hl-topo .sim-group { display: flex; flex-wrap: wrap; gap: 8px; flex: 1; align-content: flex-start; }
+  .hl-topo .sim-vtop { flex-direction: column; align-items: flex-start; gap: 3px; } .hl-topo .sim-vm b { font-size: 13px; overflow-wrap: anywhere; } .hl-topo .sim-vm { padding: 6px 8px; } .hl-topo .sim-sub { font-size: 11.5px; }
+  .hl-topo .sim-ghead { flex: 0 0 100%; margin-bottom: 0; }
+  .hl-topo .sim-vm { flex: 1 1 124px; min-width: 124px; margin-bottom: 0; cursor: default; }
+  .sim-tab { display: inline-block; margin: 0 0 6px 8px; padding: 2px 12px; border: 1px solid var(--vm-border); border-radius: 6px; color: var(--vm-border); font-weight: 700; font-size: 12px; letter-spacing: .06em; background: var(--panel); }
+  .sim-group { background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 10px; }
+  .sim-ghead { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+  .sim-ghead b { flex: 1; font-size: 12.5px; text-transform: uppercase; letter-spacing: .03em; color: var(--muted); }
+  .sim-ghead small { color: var(--muted); }
+  .sim-vm { border: 2px solid var(--vm-border); border-radius: 8px; background: var(--vm-bg); padding: 8px 10px; margin-bottom: 8px; cursor: pointer; transition: border-color .25s, background .25s; }
+  .sim-vm:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .sim-vtop { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+  .sim-vtop b { font-size: 15px; word-break: break-all; }
+  .sim-badge { font-size: 11px; font-weight: 700; padding: 1px 8px; border-radius: 999px; background: var(--border); color: var(--text); white-space: nowrap; }
+  .sim-sub { color: var(--muted); font-size: 12px; }
+  .sim-spec { font-size: 12px; margin: 4px 0 6px; }
+  .sim-det { min-height: 16px; font-size: 11.5px; color: var(--muted); margin-top: 4px; word-break: break-word; }
+  .sim-vm.st-queued { border-style: dashed; }
+  .sim-vm.st-deploying { border-color: var(--warn); background: color-mix(in srgb, var(--warn) 14%, var(--vm-bg)); animation: simglow 1.4s ease-in-out infinite; }
+  .sim-vm.st-deploying .sim-badge { background: var(--warn); color: #fff; }
+  .sim-vm.st-deployed { border-color: var(--ok); background: color-mix(in srgb, var(--ok) 14%, var(--vm-bg)); }
+  .sim-vm.st-deployed .sim-badge { background: var(--ok); color: #fff; }
+  .sim-vm.st-failed { border-color: var(--danger); background: color-mix(in srgb, var(--danger) 13%, var(--vm-bg)); }
+  .sim-vm.st-failed .sim-badge { background: var(--danger); color: #fff; }
+  .sim-vm.st-excluded { border-style: dashed; border-color: var(--muted); opacity: .5; }
+  @keyframes simglow { 50% { box-shadow: 0 0 0 4px color-mix(in srgb, var(--warn) 30%, transparent); } }
+  @media (prefers-reduced-motion: reduce) { .sim-vm.st-deploying { animation: none; } }
+  .sim-api { padding: 8px 18px; border: 2px dashed var(--vm-border); border-radius: 8px; font-weight: 700; letter-spacing: .06em; }
+  .sim-vm.st-stopped { border-style: dashed; border-color: var(--warn); }
+  .sim-vm.st-stopped .sim-badge { background: var(--warn); color: #fff; }
+  .sim-sw.st-stopped { border-color: var(--warn); border-style: dashed; background: transparent; }
+  .k8s-ph { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin: 10px 0; }
+  .k8s-ph .ph { padding: 3px 10px; border: 1px solid var(--vm-border); border-radius: 999px; font-size: 12.5px; color: var(--muted); }
+  .k8s-ph .ph.s-running { border-color: var(--warn); color: var(--text); background: color-mix(in srgb, var(--warn) 22%, transparent); }
+  .k8s-ph .ph.s-ok { border-color: var(--ok); color: var(--text); background: color-mix(in srgb, var(--ok) 20%, transparent); }
+  .k8s-ph .ph.s-failed { border-color: var(--danger); color: var(--text); background: color-mix(in srgb, var(--danger) 20%, transparent); }
+  .k8s-ph .ph.s-skipped, .k8s-ph .ph.s-stopped { border-style: dashed; }
+  .trk-dot.s-stopped { background: transparent; border: 1px solid var(--warn); }
+  body.has-dpbar #ops { bottom: 300px; } body.has-dpbar.dpb-collapsed #ops { bottom: 90px; }
+  #ops .req-panel[hidden] { display: none; }
+  #ops .req-panel { max-height: calc(100vh - 420px); min-height: 260px; display: flex; flex-direction: column; }
+  .ops-msgs { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 6px; margin: 8px 0; min-height: 120px; }
+  .ops-msg { max-width: 88%; padding: 6px 10px; border-radius: 10px; font-size: 13px; white-space: pre-wrap; }
+  .ops-msg.bot { align-self: flex-start; background: var(--accent-soft); } .ops-msg.me { align-self: flex-end; background: var(--accent); color: var(--accent-text); }
+  .ops-form { display: flex; gap: 6px; } .ops-form input { flex: 1; padding: 7px 10px; border: 1px solid var(--input-border); border-radius: 8px; background: var(--input-bg); color: var(--text); font: inherit; }
+  .hl-dash { min-height: 420px; align-items: start; display: grid; grid-template-columns: repeat(auto-fit, minmax(420px, 1fr)); gap: 14px; }
+  .gf, .kb { border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; background: var(--panel); }
+  .dash-head { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+  .dash-head b { color: #ff9830; font-size: 16px; } .kb .dash-head b { color: #00bfb3; } .dash-head span { color: var(--muted); font-size: 12.5px; } .dash-head small, .dash-head select { margin-left: auto; color: var(--muted); }
+  .dash-head select { font: inherit; font-size: 12px; padding: 2px 6px; border: 1px solid var(--input-border); border-radius: 6px; background: var(--input-bg); color: var(--text); }
+  .gf-grid-panels { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .gf-panel { border: 1px solid var(--border); border-radius: 6px; padding: 6px 8px; background: color-mix(in srgb, var(--text) 4%, transparent); }
+  .gf-title { font-size: 12px; color: var(--muted); } .gf-val { font-size: 22px; font-weight: 700; } .gf-val.bad { color: var(--danger); }
+  .gf-svg { width: 100%; height: 74px; display: block; } .gf-grid { stroke: var(--border); stroke-width: 1; }
+  .kb-rows { margin-top: 8px; font: 12px/1.45 ui-monospace, Menlo, monospace; }
+  .kb-rows { height: 252px; overflow: hidden; }   /* pevná výška, aby panel neměnil velikost a stránka neskákala */
+  .kb-row { display: grid; grid-template-columns: 70px 52px 110px minmax(0, 1fr); gap: 8px; padding: 0 4px; height: 21px; line-height: 21px; white-space: nowrap; overflow: hidden; border-radius: 3px; }
+  .kb-row span { overflow: hidden; text-overflow: ellipsis; }
+  .kb-row.lv-warn { background: color-mix(in srgb, var(--warn) 14%, transparent); } .kb-row.lv-error { background: color-mix(in srgb, var(--danger) 16%, transparent); } .kb-row.lv-info { color: var(--muted); }
+  .doc-tabs { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
+  .doc-tab { font: inherit; font-weight: 600; padding: 6px 14px; border: 1px solid var(--border); border-radius: 999px; background: var(--panel); color: var(--text); cursor: pointer; }
+  .doc-tab.on { background: var(--accent); color: var(--accent-text); border-color: var(--accent); }
+  .man-title { margin: 6px 0; } .man-cd { font-size: 13px; color: var(--muted); margin-top: 6px; } .man-steps { margin: 6px 0; padding-left: 22px; } .man-steps li { margin: 3px 0; }
+  .man-tbl td { white-space: normal; vertical-align: top; } .man-code { font: 12px ui-monospace, Menlo, monospace; word-break: break-all; }
+  .doc-list { display: flex; flex-direction: column; gap: 10px; margin-top: 10px; }
+  .doc { border: 1px solid var(--border); border-radius: 8px; padding: 8px 12px; background: var(--panel); }
+  .doc > summary { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; cursor: pointer; } .doc > summary small { margin-left: auto; color: var(--muted); }
+  .doc-kv { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 4px 18px; margin: 10px 0; }
+  .doc-kv dt { font-size: 12px; color: var(--muted); } .doc-kv dd { margin: 0 0 4px; font-weight: 600; word-break: break-word; }
+  .doc-tw { overflow-x: auto; } .doc-tbl { border-collapse: collapse; width: 100%; font-size: 12.5px; margin: 6px 0; }
+  .doc-tbl th, .doc-tbl td { text-align: left; padding: 3px 8px; border-bottom: 1px solid var(--border); white-space: nowrap; } .doc-tbl th { color: var(--muted); font-weight: 600; }
+  .doc-sub { margin-top: 6px; } .doc-sub summary { cursor: pointer; color: var(--muted); font-size: 13px; }
+  .dp-modebar { display: inline-flex; padding: 2px; border: 1px solid var(--border); border-radius: 999px; background: var(--panel); margin-bottom: 8px; }
+  .dp-mode { border: 0; background: transparent; color: var(--text); font: inherit; font-weight: 700; padding: 5px 14px; border-radius: 999px; cursor: pointer; } .dp-mode.on { background: var(--accent); color: var(--accent-text); } .dp-mode:disabled { opacity: .5; cursor: default; }
+  .dp-plan { margin-top: 10px; }
+  .hl-ok { color: var(--ok); } .hl-warn { color: var(--warn); } .hl-bad { color: var(--danger); }
+  .hl-h { margin: 18px 0 6px; }
+  .hl-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 18px; }
+  .hl-head h3 { margin: 0; }
+  .hl-incs { display: flex; flex-direction: column; gap: 8px; }
+  .hl-inc { border: 1px solid var(--border); border-left: 4px solid var(--muted); border-radius: 8px; padding: 8px 12px; background: var(--panel); }
+  .hl-inc.sev-critical { border-left-color: var(--danger); } .hl-inc.sev-major { border-left-color: var(--warn); } .hl-inc.sev-minor { border-left-color: var(--accent); }
+  .hl-inc.st-resolved { opacity: .65; border-left-color: var(--ok); }
+  .hl-inchead { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 10px; }
+  .hl-inchead small { margin-left: auto; color: var(--muted); }
+  .hl-chip { padding: 1px 8px; border-radius: 999px; font-size: 12px; font-weight: 700; border: 1px solid var(--border); }
+  .hl-chip.sev-critical { background: var(--danger); color: #fff; border-color: var(--danger); }
+  .hl-chip.sev-major { background: var(--warn); color: #fff; border-color: var(--warn); }
+  .hl-chip.stt-resolved { background: var(--ok); color: #fff; border-color: var(--ok); }
+  .hl-chip.stt-diagnosing, .hl-chip.stt-fixing, .hl-chip.stt-verifying { border-color: var(--accent); color: var(--accent); }
+  .hl-chip.stt-escalated { border-color: var(--danger); color: var(--danger); }
+  .hl-cause { color: var(--muted); font-size: 13px; margin: 4px 0; }
+  .hl-res { color: var(--ok); font-size: 13px; }
+  .hl-act { display: flex; gap: 8px; margin-top: 6px; }
+  .hl-events { display: flex; flex-direction: column; gap: 2px; margin-top: 6px; font: 12.5px/1.45 ui-monospace, Menlo, monospace; max-height: 340px; overflow-y: auto; }
+  .hl-ev { display: grid; grid-template-columns: 76px 70px 150px 190px 1fr; gap: 10px; padding: 2px 6px; border-radius: 4px; }
+  .hl-ev.warn { background: color-mix(in srgb, var(--warn) 14%, transparent); } .hl-ev.warn b { color: var(--warn); } .hl-ev.norm { color: var(--muted); }
+  .dp-out { margin: 4px 0; padding: 8px 10px; overflow-x: auto; font: 12px/1.5 ui-monospace, Menlo, monospace; background: color-mix(in srgb, var(--text) 6%, transparent); border-radius: 6px; }
+  .dpb-line.out { color: var(--muted); }
+  .dpb-line.out .dpb-outtxt { grid-column: 3 / -1; white-space: pre-wrap; }
+  #dpbar { position: fixed; left: 0; right: 0; bottom: 0; z-index: 60; background: var(--panel); border-top: 2px solid var(--accent); box-shadow: 0 -6px 24px rgba(0,0,0,.28); }
+  #dpbar[hidden] { display: none !important; }
+  .dpb-head { display: flex; align-items: center; gap: 12px; padding: 8px 18px; flex-wrap: wrap; }
+  .dpb-head b { white-space: nowrap; }
+  .dpb-bar { flex: 1 1 200px; margin: 0; height: 10px; }
+  .dpb-sum { font-size: 12.5px; color: var(--muted); }
+  .dpb-speed { display: inline-flex; align-items: center; gap: 4px; font-size: 12.5px; }
+  .dpb-speed > span { margin-right: 4px; color: var(--muted); }
+  .dpb-sp { font: inherit; font-size: 12px; font-weight: 600; padding: 3px 8px; border: 1px solid var(--input-border); border-radius: 6px; background: var(--input-bg); color: var(--text); cursor: pointer; }
+  .dpb-sp:hover { border-color: var(--accent); }
+  .dpb-sp.on { background: var(--accent); border-color: var(--accent); color: var(--accent-text); }
+  .dpb-log { height: 170px; overflow-y: auto; padding: 4px 18px 10px; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12px; border-top: 1px solid var(--border); }
+  #dpbar.collapsed .dpb-log { display: none; }
+  .dpb-line { display: grid; grid-template-columns: 96px 190px 1fr 56px 70px; gap: 10px; padding: 1px 0; }
+  .dpb-line.ok .dpb-st { color: var(--ok); }
+  .dpb-line.err { color: var(--danger); }
+  .dpb-vm { color: var(--accent); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .dpb-call { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .dpb-ms { text-align: right; color: var(--muted); }
+  .dpb-empty { color: var(--muted); padding: 8px 0; }
+  body.has-dpbar { padding-bottom: 290px; }
+  body.has-dpbar.dpb-collapsed { padding-bottom: 80px; }
+</style>
+</head>
+<body>
+<header class="brand">
+  <div class="brand-ctl"><div class="cur" id="cur" role="group" data-ia="aria-label" aria-label="Měna"><button type="button" data-cur="CZK">CZK</button><button type="button" data-cur="EUR">EUR</button><button type="button" data-cur="USD">USD</button></div>
+  <button id="lang" class="lang-btn" type="button"></button></div>
+  <img id="brand-img" class="brand-img" alt="Business Cloud Solution Designer">
+</header>
+<script>document.getElementById("brand-img").src = location.pathname.replace(/\/[^\/]*\.html$/, "").replace(/\/$/, "") + "/brand.jpg";</script>
+<div class="wrap">
+  <div class="head">
+    <div>
+      <h2><span data-i>1. Vyberte use case</span> <span class="muted" data-ia="title" title="Každý scénář obsahuje doporučené výchozí nastavení.">&#9432;</span></h2>
+      <p class="sub" data-i>Zvolte typ aplikace, který nejlépe odpovídá vašemu záměru. Každý scénář obsahuje doporučené výchozí nastavení.</p>
+    </div>
+    <div class="toggle" role="group" data-ia="aria-label" aria-label="Režim zobrazení">
+      <button id="m-biz" type="button" data-i>Business pohled</button>
+      <button id="m-arch" type="button" data-i>Architekt mód</button>
+      <button id="m-deploy" type="button" data-i>Deploy VM</button>
+      <button id="m-k8s" type="button" data-i>Deploy Kubernetes</button>
+      <button id="m-heal" type="button" data-i>Provozní asistent</button>
+      <button id="m-docs" type="button" data-i>Dokumentace</button>
+    </div>
+  </div>
+
+  <div class="grid" id="tiles"></div>
+
+  <div class="panel" id="cmp" hidden>
+    <h3 data-i>Porovnání scénářů</h3>
+    <div class="tablewrap"><table class="cmp"><thead><tr><th data-i>Use case</th><th data-i>VM</th><th data-i>CPU (GHz)</th><th data-i>RAM (GiB)</th><th data-i>Disk</th><th data-i>Dostupnost</th><th data-i>Velikost</th></tr></thead><tbody id="cmpbody"></tbody></table></div>
+    <p class="note" data-i>Klikněte na řádek pro výběr scénáře.</p>
+  </div>
+
+  <div class="panel" id="detail"></div>
+  <p class="note" data-i>Doporučené výchozí nastavení je orientační návrh podle obecných zásad (CPU v GHz = vCPU &times; 2,5 GHz). Skutečné dimenzování závisí na zátěži a mělo by se ověřit měřením.</p>
+</div>
+
+<aside class="req" aria-label="Business požadavky" data-ia="aria-label">
+  <div class="req-panel" id="req-panel" hidden>
+    <div class="req-head"><b data-i>Business požadavky</b><button id="req-close" type="button" aria-label="Zavřít" data-ia="aria-label">&times;</button></div>
+    <p class="note" style="margin:4px 0 0"><span data-i>Scénář:</span> <b id="req-uc"></b>. <span data-i>V poli je předpokládané zadání, kterému odpovídají výchozí hodnoty. Upravte ho vlastními slovy a sizing se přepočítá.</span></p>
+    <textarea id="req-text" data-ia="placeholder" placeholder="Např. 10 000 uživatelů, dostupnost 99,9 %, 2 TB dat, růst 30 % ročně, sezónní špičky"></textarea>
+    <div class="req-ex" id="req-ex"></div>
+    <div class="actions" style="margin-top:0">
+      <button id="req-go" type="button" class="btn primary" data-i>Přepočítat sizing</button>
+      <button id="req-clear" type="button" class="btn" data-i>Zrušit zadání</button>
+    </div>
+    <div class="req-out" id="req-out" aria-live="polite"></div>
+    <details>
+      <summary data-i>Jak se počítá</summary>
+      <p data-i>Je to pravidlový výpočet, ne AI. Rozpoznává počet uživatelů (celkem i souběžně), požadavky za sekundu, objem dat, dostupnost (např. 99,9 %), růst, špičky a neprodukční prostředí. Výchozí sizing odpovídá předpokládanému zadání scénáře (je předvyplněné v poli); vaše zadání se s ním porovná a zátěž se přepočítá sublineárně (exponent 0,75), s horizontem 2 roky. Aplikační vrstva se škáluje počtem instancí, databáze velikostí VM a diskem, provozní služby jen disky. Řídicí komponenty (např. etcd) s uživateli neroste. Jedna VM má strop 64 vCPU a 512 GiB, nad ním se přidávají uzly. Přepočet vychází vždy z výchozích hodnot a přepíše ruční úpravy tohoto scénáře.</p>
+    </details>
+  </div>
+  <button id="req-fab" class="req-fab" type="button" aria-expanded="false" aria-controls="req-panel">&#128172; <span data-i>Business požadavky</span></button>
+</aside>
+<aside class="req ops" id="ops" hidden aria-label="Provozní požadavky" data-ia="aria-label">
+  <div class="req-panel" id="ops-panel" hidden>
+    <div class="req-head"><b data-i>Provozní požadavky</b><button id="ops-close" type="button" aria-label="Zavřít" data-ia="aria-label">&times;</button></div>
+    <div class="ops-msgs" id="ops-msgs" aria-live="polite"></div>
+    <div class="req-ex" id="ops-ex"></div>
+    <form id="ops-form" class="ops-form"><input id="ops-in" type="text" autocomplete="off" data-ia="placeholder" placeholder="Např. Oprav aplikaci web"><button class="btn primary" type="submit" data-i>Odeslat</button></form>
+  </div>
+  <button id="ops-fab" class="req-fab" type="button" aria-expanded="false" aria-controls="ops-panel">&#128172; <span data-i>Provozní požadavky</span></button>
+</aside>
+<aside id="dpbar" hidden aria-label="Průběh nasazení" data-ia="aria-label">
+  <div class="dpb-head">
+    <b id="dpb-title">Průběh nasazení (simulace)</b><span class="trk-chip" id="dpb-state"></span>
+    <div class="trk-bar dpb-bar"><i id="dpb-fill"></i></div>
+    <span class="dpb-sum" id="dpb-sum"></span>
+    <div class="dpb-speed" id="dpb-speed" role="group" aria-label="Rychlost simulace" data-ia="aria-label,title" title="1× = simulované doby odpovědí API odpovídají skutečným; vyšší číslo je rychlejší, nižší zpomalí (vhodné pro předvádění). Změna platí okamžitě i během nasazování."><span data-i>Rychlost simulace</span></div>
+    <button id="dpb-toggle" type="button" class="btn" aria-expanded="true" data-i>Sbalit</button>
+  </div>
+  <div class="dpb-log" id="dpb-log" role="log" aria-live="polite" aria-label="Volání API" data-ia="aria-label"></div>
+</aside>
+<script>
+// základní cesta se odvodí z URL (funguje pod /hackaithon i na /)
+(function () { var b = location.pathname.replace(/\/[^\/]*\.html$/, "").replace(/\/$/, "") + "/";
+  document.write('<script src="' + b + 'i18n.js"><\/script><script src="' + b + 'usecases.js"><\/script><script src="' + b + 'sizing.js"><\/script><script src="' + b + 'pricing.js"><\/script><script src="' + b + 'deploy.js"><\/script><script src="' + b + 'cloudsim.js"><\/script><script src="' + b + 'deployer.js"><\/script><script src="' + b + 'k8sinstall.js"><\/script><script src="' + b + 'selfheal.js"><\/script>'); })();
+</script>
+<script>
+const GHZ = 2.5;
+const TIERS = ["Basic", "Standard", "Fast", "Super Fast"];
+const $ = (id) => document.getElementById(id);
+const fmt = (n) => n.toLocaleString(LANG === "en" ? "en-GB" : "cs-CZ", { maximumFractionDigits: 1 });
+const fmtGb = (gb) => gb >= 1000 ? fmt(gb / 1000) + " TB" : fmt(gb) + " GB";
+const num = (v, d) => { const n = parseFloat(v); return isFinite(n) && n >= 0 ? n : d; };
+
+let state = { id: UC.find(u => u.id !== "k8s").id, mode: "biz" };
+let rows = {}; // id -> pole komponent (upravitelné)
+
+// Sdílené skupiny: Bezpečnost, Provozní a Vývojové se ve všech scénářích přebírají z Kubernetes Clusteru (jen ke čtení).
+const SHARED_SRC = "k8s";
+const SHARED_CATS = ["Bezpečnost", "Provozní", "Vývojové"];
+const SHARED_NAMES = new Set(["firewall", "nfs-storage", "prometheus", "grafana", "elk-kibana", "backup", "keycloak", "vault", "gitlab", "argo-cd", "sonar", "nexus", "etcd"]);
+const isSharedCat = (role) => SHARED_CATS.includes(catOf(role));
+// starší kopie sdílených řádků (uložené nebo ve výchozích datech) se zahazují, nahrazuje je živý odkaz na Kubernetes Cluster
+const isLegacyCopy = (r) => SHARED_NAMES.has(r.name) && isSharedCat(r.role);
+function factory(u) {
+  const list = u.parts.map(p => ({ name: p[0], role: p[1], count: p[2], ghz: p[3] * GHZ, ram: p[4], disk: p[5], tier: p[6], note: p[7] || "", fn: p[8] || "" }));
+  return u.id === SHARED_SRC ? list : list.filter(r => !isLegacyCopy(r));
+}
+function lsGet(k) { try { return JSON.parse(localStorage.getItem(k)); } catch (e) { return null; } }
+function lsSet(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
+// nastavení cen (společné pro všechny scénáře): délka závazku, utilizace a rezervace v %
+// měna: ceník je v Kč, ostatní měny jsou přepočet kurzem ČNB (viz pricing.js)
+let currency = PR.CURRENCIES.includes(lsGet("usecase-currency")) ? lsGet("usecase-currency") : "CZK";
+const curName = () => currency === "CZK" ? (LANG === "en" ? "CZK" : "Kč") : currency;
+const locale = () => LANG === "en" ? "en-GB" : "cs-CZ";
+const dateFmt = (iso) => iso ? new Date(iso).toLocaleString(locale(), { dateStyle: "short", timeStyle: "short" }) : "-";
+// částka zadaná v Kč, zobrazená ve zvolené měně (Kč na celé koruny, EUR a USD na 2 desetinná místa)
+function fmtKc(czk, d) {
+  const dec = d !== undefined ? d : (currency === "CZK" ? 0 : 2);
+  return (czk / PR.FX[currency]).toLocaleString(locale(), { minimumFractionDigits: currency === "CZK" ? 0 : dec, maximumFractionDigits: dec }) + " " + curName();
+}
+const fxNote = () => T("Částky jsou přepočtené z Kč. Kurz {src} k {date}: 1 EUR = {eur} Kč, 1 USD = {usd} Kč.", {
+  src: LANG === "en" ? "Czech National Bank" : "ČNB",
+  date: new Date(PR.FX.date).toLocaleDateString(locale(), { day: "numeric", month: LANG === "en" ? "short" : "numeric", year: "numeric", timeZone: "UTC" }),
+  eur: PR.FX.EUR.toLocaleString(locale(), { minimumFractionDigits: 2, maximumFractionDigits: 3 }),
+  usd: PR.FX.USD.toLocaleString(locale(), { minimumFractionDigits: 2, maximumFractionDigits: 3 })
+});
+function renderCur() {
+  document.querySelectorAll("#cur button").forEach(b => { const on = b.dataset.cur === currency; b.classList.toggle("on", on); b.setAttribute("aria-pressed", String(on)); });
+  $("cur").title = fxNote();
+}
+let price = (() => {
+  const s = lsGet("usecase-price") || {}, d = PR.DEFAULTS, within = (v, lo, hi, def) => (Number.isFinite(v) && v >= lo && v <= hi ? Math.round(v) : def);
+  return { commit: PR.COMMITS.includes(s.commit) ? s.commit : d.commit, util: within(s.util, 10, 100, d.util), res: within(s.res, 10, 100, d.res) };
+})();
+function rowsOf(id) {
+  if (!rows[id]) {
+    const s = lsGet("usecase-v1-" + id), base = factory(UC.find(u => u.id === id));
+    if (Array.isArray(s)) {
+      // starší uložené řádky nemají popis funkce, doplní se z výchozích dat (stejný název a role)
+      s.forEach(r => { if (id === SHARED_SRC && r.name === "etcd" && r.role === "Aplikační") r.role = "Bezpečnost"; });
+      s.forEach(r => { if (r.fn === undefined) { const b = base.find(x => x.name === r.name && x.role === r.role); r.fn = b ? b.fn : ""; } });
+      rows[id] = id === SHARED_SRC ? s : s.filter(r => !isLegacyCopy(r));
+    } else rows[id] = base;
+  }
+  return rows[id];
+}
+// Sdílené řádky (jen kopie ke čtení) z aktuálního stavu Kubernetes Clusteru
+function sharedRows(id) {
+  if (id === SHARED_SRC) return [];
+  return rowsOf(SHARED_SRC).filter(r => isSharedCat(r.role)).map(r => Object.assign({}, r, { shared: true }));
+}
+// Všechny řádky scénáře: vlastní (upravitelné) + sdílené z Kubernetes Clusteru
+const viewOf = (id) => rowsOf(id).concat(sharedRows(id));
+function sum(list) {
+  const t = { vm: 0, ghz: 0, ram: 0, disk: 0, ha: list.length > 0 };
+  list.forEach(r => { t.vm += r.count; t.ghz += r.count * r.ghz; t.ram += r.count * r.ram; t.disk += r.count * r.disk; });
+  t.ha = list.some(r => r.count >= 2);
+  t.vcpu = t.ghz / GHZ;
+  t.size = t.vcpu < 25 ? "S" : t.vcpu < 100 ? "M" : "L";
+  return t;
+}
+const SIZE = { S: "Malá (S)", M: "Střední (M)", L: "Velká (L)" };
+
+// --- jazyk: statické texty se překládají podle atributů data-i (text) a data-ia (atributy) ---
+const FLAG = {
+  en: '<svg viewBox="0 0 60 30" width="32" height="16" aria-hidden="true"><clipPath id="fl-s"><path d="M0,0 v30 h60 v-30 z"/></clipPath><clipPath id="fl-t"><path d="M30,15 h30 v15 z v15 h-30 z h-30 v-15 z v-15 h30 z"/></clipPath><g clip-path="url(#fl-s)"><path d="M0,0 v30 h60 v-30 z" fill="#012169"/><path d="M0,0 L60,30 M60,0 L0,30" stroke="#fff" stroke-width="6"/><path d="M0,0 L60,30 M60,0 L0,30" clip-path="url(#fl-t)" stroke="#C8102E" stroke-width="4"/><path d="M30,0 v30 M0,15 h60" stroke="#fff" stroke-width="10"/><path d="M30,0 v30 M0,15 h60" stroke="#C8102E" stroke-width="6"/></g></svg>',
+  cs: '<svg viewBox="0 0 3 2" width="24" height="16" aria-hidden="true"><rect width="3" height="1" fill="#fff"/><rect y="1" width="3" height="1" fill="#d7141a"/><path d="M0,0 L1.5,1 L0,2 z" fill="#11457e"/></svg>'
+};
+function applyStatic() {
+  document.documentElement.lang = LANG;
+  document.title = "Business Cloud Solution Designer";
+  document.querySelectorAll("[data-i]").forEach(el => { if (el.dataset.k === undefined) el.dataset.k = el.textContent.trim(); el.textContent = T(el.dataset.k); });
+  document.querySelectorAll("[data-ia]").forEach(el => el.dataset.ia.split(",").forEach(a => {
+    const dk = "k_" + a.replace("-", "_"); if (el.dataset[dk] === undefined) el.dataset[dk] = el.getAttribute(a) || "";
+    el.setAttribute(a, T(el.dataset[dk]));
+  }));
+  // tlačítko ukazuje jazyk, na který lze přepnout
+  const to = LANG === "cs" ? "en" : "cs";
+  $("lang").innerHTML = FLAG[to] + "<span>" + (to === "en" ? "EN" : "CZ") + "</span>";
+  $("lang").title = to === "en" ? "English" : "Čeština";
+  $("lang").setAttribute("aria-label", to === "en" ? "Switch to English" : "Přepnout do češtiny");
+  if ($("cmpbtn")) $("cmpbtn").textContent = $("cmp").hidden ? T("Porovnat scénáře") : T("Skrýt porovnání");
+  renderCur(); if (typeof dpbTitle === "function") dpbTitle();
+}
+document.querySelectorAll("#cur button").forEach(b => b.addEventListener("click", () => {
+  currency = b.dataset.cur; lsSet("usecase-currency", currency); renderCur(); renderAll();
+}));
+function setLang(l) {
+  LANG = l; try { localStorage.setItem("usecase-lang", l); } catch (e) {}
+  if (typeof SZ !== "undefined") SZ.setLang(l);
+  applyStatic(); renderExamples(); renderAll();
+}
+
+function renderTiles() {
+  const g = $("tiles"); g.innerHTML = "";
+  // první dlaždice: nápověda s logem Kubernetes (scénář Kubernetes Cluster není v nabídce; logo ho otevře kvůli úpravě sdílených skupin)
+  const hint = document.createElement("div"); hint.className = "tile hint-tile";
+  hint.innerHTML = `<button type="button" class="ic hint-logo"></button><b></b><span class="d"></span><button id="cmpbtn" type="button"></button>`;
+  const k8s = UC.find(u => u.id === SHARED_SRC), lg = hint.querySelector(".hint-logo");
+  lg.textContent = k8s.icon; lg.title = T(k8s.name); lg.setAttribute("aria-label", T(k8s.name));
+  lg.addEventListener("click", () => { state.id = SHARED_SRC; lsSet("usecase-state", state); renderAll(); });
+  hint.querySelector("b").textContent = T("★ Nevíte, který use case zvolit?"); hint.querySelector(".d").textContent = T("Porovnejte scénáře nebo se poraďte s architektem.");
+  const cb = hint.querySelector("#cmpbtn"); cb.textContent = $("cmp").hidden ? T("Porovnat scénáře") : T("Skrýt porovnání");
+  cb.addEventListener("click", () => { const c = $("cmp"); c.hidden = !c.hidden; cb.textContent = c.hidden ? T("Porovnat scénáře") : T("Skrýt porovnání"); });
+  g.appendChild(hint);
+  UC.filter(u => u.id !== SHARED_SRC).forEach(u => {
+    const b = document.createElement("button"); b.type = "button"; b.className = "tile";
+    b.setAttribute("aria-pressed", String(u.id === state.id));
+    b.innerHTML = `<span class="i" aria-hidden="true">i</span><span class="ic" aria-hidden="true">${u.icon}</span><b></b><span class="d"></span>`;
+    b.querySelector("b").textContent = T(u.name); b.querySelector(".d").textContent = T(u.desc); b.title = T(u.about);
+    b.addEventListener("click", () => { state.id = u.id; lsSet("usecase-state", state); renderAll(); });
+    g.appendChild(b);
+  });
+}
+
+function renderCompare() {
+  const body = $("cmpbody"); body.innerHTML = "";
+  UC.filter(u => u.id !== SHARED_SRC).forEach(u => {
+    const t = sum(viewOf(u.id)); const tr = document.createElement("tr"); if (u.id === state.id) tr.className = "sel";
+    tr.innerHTML = `<td></td><td>${t.vm}</td><td>${fmt(t.ghz)}</td><td>${fmt(t.ram)}</td><td>${fmtGb(t.disk)}</td><td class="${t.ha ? "ha-yes" : "ha-no"}">${t.ha ? "HA" : T("bez HA")}</td><td>${t.size}</td>`;
+    tr.firstChild.textContent = T(u.name); if (u.brief) tr.title = T("Předpokládané zadání: ") + T(u.brief);
+    tr.addEventListener("click", () => { state.id = u.id; lsSet("usecase-state", state); renderAll(); window.scrollTo({ top: 0, behavior: "smooth" }); });
+    body.appendChild(tr);
+  });
+}
+
+// Skupiny podle role (jen u use case s příznakem groupByRole), pořadí podle prvního výskytu role.
+// Kategorie = text role před závorkou ("Aplikační (Webová vrstva)" -> "Aplikační"; anglické názvy se mapují zpět); pořadí jako v Kubernetes Clusteru.
+const CAT_ORDER = ["Bezpečnost", "Aplikační", "Databázové", "Provozní", "Vývojové"];
+const catOf = (role) => { const c = String(role).split(" (")[0]; return CAT_BACK[c.toLowerCase()] || c; };
+function groupsOf(u, list) {
+  if (!u.groupByRole) return [{ role: null, idx: list.map((_, i) => i) }];
+  const m = new Map();
+  list.forEach((r, i) => { const c = catOf(r.role); if (!m.has(c)) m.set(c, []); m.get(c).push(i); });
+  const rank = (c) => { const k = CAT_ORDER.indexOf(c); return k < 0 ? CAT_ORDER.length : k; };
+  return [...m].map(([role, idx], n) => ({ role, idx, n })).sort((a, b) => rank(a.role) - rank(b.role) || a.n - b.n);
+}
+const isHl = (u, role) => (u.highlightRoles || []).includes(role);
+
+function renderDetail() {
+  const u = UC.find(x => x.id === state.id), own = rowsOf(u.id), list = viewOf(u.id), t = sum(list), el = $("detail");
+  // popisek skupiny, která se přebírá z Kubernetes Clusteru
+  const sharedTag = (cat) => (u.id !== SHARED_SRC && SHARED_CATS.includes(cat)) ? T("sdíleno z Kubernetes Clusteru") : "";
+  el.innerHTML = "";
+  const h = document.createElement("h3"); h.textContent = T("2. Doporučené nastavení: {n}", { n: T(u.name) }); el.appendChild(h);
+  const p = document.createElement("p"); p.className = "muted"; p.style.margin = "0"; p.textContent = T(u.about); el.appendChild(p);
+  if (u.brief) {
+    const bp = document.createElement("p"); bp.className = "req-brief";
+    const bl = document.createElement("b"); bl.textContent = T("Předpokládané zadání: ");
+    bp.append(bl, document.createTextNode(Q(T(u.brief)) + " " + T("Výchozí hodnoty tomuto zadání odpovídají.")));
+    el.appendChild(bp);
+  }
+  const rq = lsGet("usecase-req-" + u.id);
+  const sizing = state.mode === "biz" || state.mode === "arch";   // od záložky Deploy VM dál se přehled sizingu nezobrazuje
+  if (sizing && rq && rq.text) { const ap = document.createElement("p"); ap.className = "req-applied"; ap.textContent = T("Sizing přepočítán podle zadání: ") + Q(rq.text); el.appendChild(ap); }
+
+
+  const stats = document.createElement("div"); stats.className = "stats";
+  const mk = (l, v) => { const d = document.createElement("div"); d.className = "stat"; d.innerHTML = `<small></small><b></b>`; d.querySelector("small").textContent = l; d.querySelector("b").textContent = v; return d; };
+  stats.append(mk(T("Počet VM"), fmt(t.vm)), mk("CPU", fmt(t.ghz) + " GHz"), mk("RAM", fmt(t.ram) + " GiB"), mk("Disk", fmtGb(t.disk)));
+  const av = mk(T("Dostupnost"), t.ha ? T("Vysoká (HA)") : T("Bez redundance")); av.querySelector("b").className = t.ha ? "ha-yes" : "ha-no"; av.querySelector("b").style.fontSize = "16px";
+  const sz = mk(T("Velikost"), T(SIZE[t.size]));
+  stats.append(av, sz); if (sizing) el.appendChild(stats);
+
+  if (state.mode === "biz") {
+    const l = document.createElement("div"); l.innerHTML = "<b></b>"; l.firstChild.textContent = T("Co obsahuje balíček"); const ul = document.createElement("ul"); ul.className = "parts";
+    if (u.groupByRole) {
+      groupsOf(u, list).forEach(g => {
+        const hl = isHl(u, g.role), s = sum(g.idx.map(i => list[i]));
+        const box = document.createElement("div"); box.className = "bgrp" + (hl ? " hl" : "");
+        const hd = document.createElement("div"); hd.className = "bgrp-h"; hd.textContent = T(g.role);
+        const sm = document.createElement("small"); sm.textContent = `${fmt(s.vm)} VM · ${fmt(s.ghz)} GHz · ${fmt(s.ram)} GiB · ${fmtGb(s.disk)}`; hd.appendChild(sm);
+        if (hl) { const b = document.createElement("span"); b.className = "badge"; b.textContent = T("Pro Business Use-Case"); hd.appendChild(b); }
+        const tag = sharedTag(g.role); if (tag) { const sh = document.createElement("small"); sh.textContent = "· " + tag; hd.appendChild(sh); }
+        const gl = document.createElement("ul"); gl.className = "parts";
+        g.idx.forEach(i => {
+          const r = list[i], k = String(r.role).indexOf(" ("), det = k >= 0 ? String(r.role).slice(k + 2, -1) : "";
+          // v Business pohledu funkce komponenty; bez ní (nová VM, starší uložená data) název a popis role
+          const label = r.fn ? T(r.fn) : (r.name + (det ? " – " + T(det) : ""));
+          const li = document.createElement("li"); li.textContent = `${label}${r.count > 1 ? " (" + r.count + "×)" : ""}`; gl.appendChild(li);
+        });
+        box.append(hd, gl); l.appendChild(box);
+      });
+    } else {
+      // role se mohou opakovat (např. více komponent s rolí Aplikační), pak se přidá název VM
+      const roleCount = {}; list.forEach(r => { roleCount[r.role] = (roleCount[r.role] || 0) + 1; });
+      list.forEach(r => { const li = document.createElement("li"); li.textContent = `${roleCount[r.role] > 1 ? trRole(r.role) + ": " + r.name : trRole(r.role)}${r.count > 1 ? " (" + r.count + "×)" : ""}`; ul.appendChild(li); });
+      l.appendChild(ul);
+    }
+    el.appendChild(l);
+    const n = document.createElement("p"); n.className = "note"; n.textContent = T("Technické parametry jednotlivých VM a jejich úpravu najdete v Architekt módu."); el.appendChild(n);
+    return;
+  }
+
+  if (state.mode === "deploy") { renderDeploy(u, list, el); return; }
+  if (state.mode === "k8s") { renderK8s(u, list, el); return; }
+  if (state.mode === "heal") { renderHeal(u, list, el); return; }
+  if (state.mode === "docs") { renderDocs(u, list, el); return; }
+
+  const wrap = document.createElement("div"); wrap.className = "tablewrap";
+  const tb = document.createElement("table");
+  const HEAD = ["VM", "Role", T("Počet"), "CPU (GHz)", "RAM (GiB)", "Disk (GB)", T("Třída disku"), T("Cena CPU"), T("Cena RAM"), T("Cena disk"), T("Cena IaaS"), T("Cloudlety"), T("Cena PaaS"), ""];
+  const thead = document.createElement("thead"), htr = document.createElement("tr");
+  HEAD.forEach(x => { const th = document.createElement("th"); th.textContent = x; htr.appendChild(th); }); thead.appendChild(htr);
+  // v záhlaví Ceny PaaS jsou parametry výpočtu: utilizace a rezervace
+  const paasSub = document.createElement("small"); paasSub.className = "pr-sub";
+  htr.children[12].append(document.createElement("br"), document.createTextNode(" "), paasSub);
+  const tfoot = document.createElement("tfoot"), ftr = document.createElement("tr");
+  for (let k = 0; k < 13; k++) ftr.appendChild(document.createElement("td"));   // první buňka zabírá 2 sloupce (VM + Role)
+  ftr.firstChild.colSpan = 2; ftr.firstChild.textContent = T("Celkem");
+  tfoot.appendChild(ftr);
+  const body = document.createElement("tbody");
+  tb.append(thead, body, tfoot);
+  const priceRefs = [];   // buňky s cenami jednotlivých řádků (plní updatePrices)
+  const commit = (re) => { lsSet("usecase-v1-" + u.id, own); renderTiles(); renderCompare(); if (re) renderDetail(); else { renderTotalsOnly(); } };
+  const addRow = (r, i, hl) => {
+    const tr = document.createElement("tr"); if (hl) tr.className = "hl-row";
+    const cell = (cls) => { const td = document.createElement("td"); if (cls) td.className = cls; tr.appendChild(td); return td; };
+    // role se zobrazuje přeložená; do dat se zapíše jen to, co uživatel skutečně změní
+    const text = (key) => { const i2 = document.createElement("input"); i2.value = key === "role" ? trRole(r[key]) : r[key]; i2.title = i2.value; i2.addEventListener("change", () => { r[key] = i2.value; commit(key === "role" && !!u.groupByRole); }); return i2; };
+    const numIn = (key, min, redraw) => { const i2 = document.createElement("input"); i2.type = "number"; i2.min = min; i2.step = "any"; i2.value = r[key]; i2.addEventListener("change", () => { r[key] = key === "count" ? Math.max(1, Math.round(num(i2.value, 1))) : num(i2.value, r[key]); commit(true); }); return i2; };
+    cell().appendChild(text("name")); cell().appendChild(text("role"));
+    cell("num").appendChild(numIn("count", 1)); cell("num").appendChild(numIn("ghz", 0));
+    cell("num").appendChild(numIn("ram", 0)); cell("num").appendChild(numIn("disk", 0));
+    const sel = document.createElement("select"); TIERS.forEach(x => { const o = document.createElement("option"); o.textContent = x; if (x === r.tier) o.selected = true; sel.appendChild(o); });
+    sel.addEventListener("change", () => { r.tier = sel.value; commit(false); }); cell().appendChild(sel);
+    const pc = []; for (let k = 0; k < 6; k++) pc.push(cell("pr"));              // Cena CPU, RAM, disk, IaaS, Cloudlety, Cena PaaS
+    pc[3].classList.add("pr-total");
+    const pv = document.createElement("span"), ps = document.createElement("small"); ps.className = "pr-sub"; pc[5].append(pv, document.createTextNode(" "), ps);   // cena PaaS + rezervované / dynamické cloudlety
+    priceRefs.push({ r, i, pc, pv, ps });
+    const del = document.createElement("button"); del.type = "button"; del.className = "btn danger"; del.textContent = "×"; del.title = T("Odebrat VM");
+    del.addEventListener("click", () => { own.splice(i, 1); commit(true); });
+    const dc = cell(); if (!r.shared) dc.appendChild(del);
+    if (r.shared) { tr.classList.add("shared-row"); tr.title = T("Sdíleno z Kubernetes Clusteru, upravte ho tam."); tr.querySelectorAll("input,select").forEach(x => { x.disabled = true; }); }
+    body.appendChild(tr);
+    if (r.note) { const n = document.createElement("tr"); if (hl) n.className = "hl-row"; const td = document.createElement("td"); td.colSpan = 14; td.className = "note"; td.textContent = r.name + ": " + r.note; n.appendChild(td); body.appendChild(n); }
+  };
+  groupsOf(u, list).forEach(g => {
+    const hl = isHl(u, g.role);
+    if (g.role !== null) {
+      const s = sum(g.idx.map(i => list[i]));
+      const gr = document.createElement("tr"); gr.className = "grp" + (hl ? " hl" : "");
+      const gd = document.createElement("td"); gd.colSpan = 14; gd.textContent = T(g.role);
+      const sm = document.createElement("small"); sm.textContent = `${fmt(s.vm)} VM · ${fmt(s.ghz)} GHz · ${fmt(s.ram)} GiB · ${fmtGb(s.disk)}`; gd.appendChild(sm);
+      if (hl) { const b = document.createElement("span"); b.className = "badge"; b.style.marginLeft = "8px"; b.textContent = T("Pro Business Use-Case"); gd.appendChild(b); }
+      const tag = sharedTag(g.role); if (tag) { const sh = document.createElement("small"); sh.textContent = "· " + tag; gd.appendChild(sh); }
+      gr.appendChild(gd); body.appendChild(gr);
+    }
+    g.idx.forEach(i => addRow(list[i], i, hl));
+  });
+  // --- ceny IaaS a PaaS (viz pricing.js): délka závazku, posuvníky Utilizace a Rezervace ---
+  const pp = document.createElement("div"); pp.className = "pricing";
+  const lab = (text, ...kids) => { const l = document.createElement("label"), s = document.createElement("span"); s.textContent = text; l.append(s, ...kids); return l; };
+  const csel = document.createElement("select");
+  PR.COMMITS.forEach(m => { const o = document.createElement("option"); o.value = m; o.textContent = m === 0 ? T("Bez závazku") : T("{n} měs.", { n: m }); if (m === price.commit) o.selected = true; csel.appendChild(o); });
+  csel.addEventListener("change", () => { price.commit = parseInt(csel.value, 10); lsSet("usecase-price", price); renderTotalsOnly(); });
+  const range = (key, min, max, step) => {
+    const inp = document.createElement("input"), v = document.createElement("b");
+    inp.type = "range"; inp.min = min; inp.max = max; inp.step = step; inp.value = price[key]; v.textContent = price[key] + " %";
+    inp.addEventListener("input", () => { price[key] = parseInt(inp.value, 10); v.textContent = price[key] + " %"; lsSet("usecase-price", price); renderTotalsOnly(); });
+    return [inp, v];
+  };
+  const sumBox = document.createElement("div"); sumBox.className = "pr-sum";
+  const sumCl = document.createElement("div"); sumCl.className = "pr-sum";
+  const grp = (cls, ...kids) => { const g = document.createElement("div"); g.className = "pr-group " + cls; g.append(...kids); return g; };
+  pp.append(grp("pr-g-tot", lab(T("Délka závazku"), csel), sumBox), grp("pr-g-cl", (() => { const s = document.createElement("div"); s.className = "pr-sliders"; s.append(lab(T("Utilizace"), ...range("util", 10, 100, 5)), lab(T("Rezervace"), ...range("res", 10, 100, 1))); return s; })(), sumCl));
+  el.appendChild(pp);
+  wrap.appendChild(tb); el.appendChild(wrap);
+
+  const updatePrices = (f) => {
+    const P = PR.paas(list, price.util, price.res);
+    let tc = 0, tr = 0, td = 0;
+    paasSub.textContent = T("util. {u} % · rez. {r} %", { u: price.util, r: price.res });
+    priceRefs.forEach(({ r, i, pc, pv, ps }) => {
+      const v = PR.iaasVm(r, price.commit), n = r.count, p = P.rows[i];
+      tc += n * v.cpu; tr += n * v.ram; td += n * v.disk;
+      [fmtKc(n * v.cpu), fmtKc(n * v.ram), fmtKc(n * v.disk), fmtKc(n * v.total), fmt(n * p.billedPerVm)].forEach((x, k) => { pc[k].textContent = x; });
+      pv.textContent = fmtKc(n * p.priceVm);
+      ps.textContent = T("rez. {r} · dyn. {d}", { r: fmt(n * p.reservedPerVm), d: fmt(n * p.dynamicPerVm) });
+    });
+    f[6].textContent = fmtKc(tc); f[7].textContent = fmtKc(tr); f[8].textContent = fmtKc(td); f[9].textContent = fmtKc(tc + tr + td);
+    f[10].textContent = fmt(P.reserved + P.dynamic);
+    f[11].textContent = fmtKc(P.cost);
+    const fs = document.createElement("small"); fs.className = "pr-sub"; fs.textContent = T("rez. {r} · dyn. {d}", { r: fmt(P.reserved), d: fmt(P.dynamic) }); f[11].append(document.createTextNode(" "), fs);
+    sumBox.textContent = ""; sumCl.textContent = "";
+    const chips = (box, items, big) => items.forEach(([k, v]) => {
+      const c = document.createElement("span"); c.className = "pr-chip" + (big ? " pr-big" : ""); c.textContent = k + ": "; const b = document.createElement("b"); b.textContent = v; c.appendChild(b); box.appendChild(c);
+    });
+    chips(sumBox, [[T("Cena IaaS celkem"), fmtKc(tc + tr + td)]], true);
+    chips(sumCl, [[T("Cena PaaS celkem"), fmtKc(P.cost)]], true);
+    chips(sumCl, [[T("Cloudlety rezervované (R)"), fmt(P.reserved)], [T("Cloudlety dynamické (D)"), fmt(P.dynamic)], [T("Ø cena cloudletu"), fmtKc(P.eff, currency === "CZK" ? 1 : 2)]]);
+  };
+  window.renderTotalsOnly = () => { const f = ftr.children, s = sum(list); f[1].textContent = fmt(s.vm); f[2].textContent = fmt(s.ghz) + " GHz"; f[3].textContent = fmt(s.ram) + " GiB"; f[4].textContent = fmtGb(s.disk); updatePrices(f); };
+  renderTotalsOnly();
+
+  const act = document.createElement("div"); act.className = "actions";
+  const add = document.createElement("button"); add.type = "button"; add.className = "btn"; add.textContent = T("+ Přidat VM");
+  add.addEventListener("click", () => { own.push({ name: "nova-vm", role: "Provozní", count: 1, ghz: 5, ram: 4, disk: 50, tier: "Standard", note: "" }); commit(true); });
+  const rst = document.createElement("button"); rst.type = "button"; rst.className = "btn danger"; rst.textContent = T("Reset na výchozí");
+  rst.addEventListener("click", () => { if (!confirm(T("Vrátit {n} na výchozí nastavení?", { n: T(u.name) }))) return; try { localStorage.removeItem("usecase-v1-" + u.id); localStorage.removeItem("usecase-req-" + u.id); } catch (e) {} delete rows[u.id]; renderAll(); });
+  const ex = document.createElement("button"); ex.type = "button"; ex.className = "btn"; ex.textContent = "Export JSON";
+  ex.addEventListener("click", () => { const b = new Blob([JSON.stringify({ usecase: u.id, nazev: u.name, vm: list }, null, 2)], { type: "application/json" }); const a = document.createElement("a"); a.href = URL.createObjectURL(b); a.download = "usecase-" + u.id + ".json"; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 1000); });
+  act.append(add, rst, ex); el.appendChild(act);
+}
+
+// --- Deployment mód: simulace nasazení VM v Business Cloud IaaS přímými voláními API (bez skriptů) ---
+// Stránka volá API přímo (Deployer), ale proti simulovanému cloudu v prohlížeči (cloudsim.js): nic se nevytváří a nepotřebují
+// se přihlašovací údaje. Karty VM mění barvu podle stavu a dole se zobrazuje průběh volání API.
+const deployCfg = Object.assign({ prefix: "", image: "", imageName: "", vlan: "", key: "", start: false, concurrency: 3, speed: 4, failure: false, mode: "sim", liveUrl: "" }, lsGet("usecase-deploy") || {});
+const deploySkip = {};   // scénář -> názvy VM vyřazených z nasazení
+const simStore = {};     // scénář -> stav simulace
+let simUi = null;        // aktuálně vykreslená obrazovka (kvůli živým aktualizacím)
+const mkEl = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text !== undefined) e.textContent = text; return e; };
+const SIM_COLS = [["Bezpečnost", "DMZ"], ["Aplikační", "APP"], ["Databázové", "DATA"], ["Provozní", "OPS"], ["Vývojové", "CI/CD"]];
+const SIM_ST = { planned: "plánováno", queued: "ve frontě", deploying: "nasazuje se", deployed: "nasazeno", failed: "chyba", excluded: "vyřazeno" };
+const SIM_STEP = { create: "Vytvoření VM", clone: "Klon image", wait: "Čekání na klon", resize: "Zvětšení disku", attach: "Disk a síť", verify: "Ověření", start: "Spuštění" };
+const SIM_STEP_ST = { pending: "čeká", running: "probíhá", ok: "hotovo", failed: "chyba", skipped: "přeskočeno", stopped: "přerušeno" };
+
+function deployMsg(e) {
+  switch (e.code) {
+    case "image": return T("Vyberte image z knihovny.");
+    case "vlan": return T("UUID VLAN není platné.");
+    case "key": return T("SSH klíč „{k}“ není platné UUID.", { k: e.value });
+    case "none": return T("Není vybrána žádná VM.");
+    case "max": return T("V jednom plánu je nejvýše {max} VM (vybráno {n}).", { max: e.max, n: e.n });
+    case "name": return T("Název VM „{n}“ není platný (písmena, čísla, . _ -).", { n: e.value });
+    case "ghz": return T("„{n}“: {r} GHz se zaokrouhlí na {a} GHz ({s} jader po 2,5 GHz).", { n: e.name, r: fmt(e.req), a: fmt(e.act), s: e.smp });
+  }
+  return e.code;
+}
+// Stavy nasazení se ukládají v prohlížeči a po obnovení stránky se vrací tak, jak běhy skutečně dopadly.
+// Běh přerušený zavřením stránky se označí jako přerušený: rozpracovaná VM jako chybná, VM ve frontě jako plánovaná.
+const simSaved = lsGet("usecase-sim-state") || {}, k8sSaved = lsGet("usecase-k8s-state") || {}, persistT = {};
+const revive = (log) => (log || []).map((e) => Object.assign({}, e, { t: new Date(e.t) }));
+function persistLater(key, fn) { clearTimeout(persistT[key]); persistT[key] = setTimeout(fn, 300); }
+function simPersist(sim) { persistLater("sim", () => { const o = lsGet("usecase-sim-state") || {}; o[sim.id] = { vms: sim.vms, run: { status: sim.run.status, started: sim.run.started, ended: sim.run.ended }, snap: sim.cloud.snapshot(), log: sim.log.slice(-150), seq: sim.seq }; lsSet("usecase-sim-state", o); }); }
+function simForget(id) { clearTimeout(persistT.sim); const o = lsGet("usecase-sim-state") || {}; delete o[id]; lsSet("usecase-sim-state", o); delete simSaved[id]; }
+function simOf(id) {
+  if (!simStore[id]) {
+    const sv = simSaved[id], sim = { id, cloud: SimCloud.create({ speed: deployCfg.speed, seed: sv ? (Date.now() % 100000) + 11 : 7 }), vms: {}, log: [], seq: 0, lists: null, view: [], run: { status: "idle", handle: null, started: null, ended: null } };
+    if (sv) {
+      sim.cloud.restore(sv.snap); sim.vms = sv.vms || {}; sim.log = revive(sv.log); sim.seq = sv.seq || 0; sim.run = { status: sv.run.status === "running" ? "stopped" : sv.run.status, handle: null, started: sv.run.started, ended: sv.run.ended || (sv.run.status === "running" ? Date.now() : null) };
+      Object.values(sim.vms).forEach((v) => { if (v.status === "queued") v.status = "planned"; else if (v.status === "deploying") { v.status = "failed"; v.error = v.error || "Přerušeno: stránka byla zavřena během nasazování"; } });
+    }
+    simStore[id] = sim;
+  }
+  return simStore[id];
+}
+// přímé volání API (Deployer.makeApi) s protokolem do dolního panelu
+const simApi = (sim) => Deployer.makeApi(sim.cloud, (e) => { e.seq = ++sim.seq; sim.log.push(e); if (sim.log.length > 400) sim.log.shift(); if (simStore[state.id] === sim) dpbRender(); });
+function simLists(sim) {   // jedno sdílené načtení (GET libdrives/, vlans/, pubkeys/), souběžné požadavky na něj čekají
+  if (!sim.listsP) sim.listsP = (async () => {
+    const api = simApi(sim), lib = await api.call("GET", "libdrives/", null, { limit: 100 }), vl = await api.call("GET", "vlans/"), ks = await api.call("GET", "pubkeys/");
+    sim.lists = { images: lib.objects.filter((i) => i.image_type === "preinst" && i.media === "disk" && !i.deprecated), vlans: vl.objects, keys: ks.objects };
+    return sim.lists;
+  })();
+  return sim.listsP;
+}
+
+// --- dolní panel: průběh nasazení a protokol volání API ---
+const dpb = { lastSeq: 0, sim: null, timer: null };
+const isSimMode = () => state.mode === "deploy" || state.mode === "k8s" || state.mode === "heal";
+const barSim = () => state.mode === "k8s" ? k8sStore[state.id] : state.mode === "heal" ? healStore[state.id] : simStore[state.id];
+function dpbTitle() { $("dpb-title").textContent = T(state.mode === "k8s" ? "Průběh instalace Kubernetes (simulace)" : state.mode === "heal" ? "Činnost provozního asistenta (simulace)" : "Průběh nasazení (simulace)"); }
+function dpbShow(on) {
+  $("dpbar").hidden = !on; document.body.classList.toggle("has-dpbar", on);
+  clearInterval(dpb.timer); dpb.timer = null;
+  if (on) { dpbTitle(); speedRender(); dpbRender(true); dpb.timer = setInterval(() => { const s = barSim(); if (s && s.run.status === "running") dpbRender(); }, 500); }
+}
+function simCounts(sim) {
+  const c = { total: sim.view.length, deployed: 0, deploying: 0, failed: 0, queued: 0, steps: 0 };
+  sim.view.forEach((n) => {
+    const v = sim.vms[n]; if (!v) return;
+    if (v.status === "deployed") c.deployed++; else if (v.status === "deploying") c.deploying++; else if (v.status === "failed") c.failed++; else if (v.status === "queued") c.queued++;
+    c.steps += Deployer.STEPS.filter((s) => v.steps[s] && ["ok", "skipped"].includes(v.steps[s].status)).length;
+  });
+  return c;
+}
+// souhrn pro lištu podle módu: stav běhu, procenta a text
+function barModel(sim) {
+  const secs = sim.run.started ? Math.round(((sim.run.ended || Date.now()) - sim.run.started) / 1000) : 0;
+  if (state.mode === "heal") {
+    const S = sim.eng.S, sc = sim.eng.score(), ok = sim.nodes.filter((n) => S.node[n.name].status === "healthy").length;
+    return { st: sim.run.status, pct: sc, sum: T("Zdraví {h} % · zdravé uzly: {a} z {n} · aktivní incidenty: {i} · vyřešeno: {r} · {s} s", { h: sc, a: ok, n: sim.nodes.length, i: sim.eng.open().length, r: S.resolved, s: secs }) };
+  }
+  if (state.mode === "k8s") {
+    const c = k8sCounts(sim);
+    return { st: sim.run.status, pct: c.pct, sum: T("{d} z {t} uzlů připraveno · probíhá: {r} · chyba: {f} · fáze {p} z {pt} · {pc} % · {s} s", { d: c.ready, t: c.total, r: c.installing, f: c.failed, p: c.phases, pt: K8sInstaller.PHASES.length, pc: c.pct, s: secs }) };
+  }
+  const c = simCounts(sim), pct = c.total ? Math.round(100 * c.steps / (c.total * Deployer.STEPS.length)) : 0;
+  return { st: sim.run.status, pct, sum: T("{d} z {t} VM nasazeno · probíhá: {r} · ve frontě: {q} · chyba: {f} · {p} % · {s} s", { d: c.deployed, t: c.total, r: c.deploying, q: c.queued, f: c.failed, p: pct, s: secs }) };
+}
+function dpbRender(full) {
+  const sim = barSim(); if (!sim) return;
+  const m = barModel(sim), st = m.st;
+  const label = { idle: "Čeká na spuštění", running: "Probíhá", ok: "Hotovo", failed: "Chyba", stopped: "Přerušeno" }[st] || st;
+  $("dpb-state").textContent = T(label); $("dpb-state").dataset.s = st; $("dpb-fill").style.width = m.pct + "%"; $("dpb-sum").textContent = m.sum;
+  const log = $("dpb-log");
+  if (full || dpb.sim !== sim) { log.innerHTML = ""; dpb.lastSeq = 0; dpb.sim = sim; }
+  const atEnd = log.scrollTop + log.clientHeight >= log.scrollHeight - 30;
+  if (!sim.log.length && !log.children.length) log.appendChild(mkEl("div", "dpb-empty", T(state.mode === "k8s" || state.mode === "heal" ? "Zatím žádné příkazy." : "Zatím žádná volání API.")));
+  const fresh = sim.log.filter((e) => e.seq > dpb.lastSeq);
+  if (fresh.length) { const empty = log.querySelector(".dpb-empty"); if (empty) empty.remove(); }
+  fresh.forEach((e) => {
+    const row = mkEl("div", "dpb-line " + (e.out !== undefined ? "out" : e.ok ? "ok" : "err")), sp = () => document.createTextNode(" ");
+    const time = mkEl("span", "", e.t.toLocaleTimeString(locale(), { hour12: false }) + "." + String(e.t.getMilliseconds()).padStart(3, "0"));
+    if (e.out !== undefined) row.append(time, sp(), mkEl("span", "dpb-vm", e.tag || "–"), sp(), mkEl("span", "dpb-call dpb-outtxt", "  " + e.out));
+    else row.append(time, sp(), mkEl("span", "dpb-vm", e.tag || "–"), sp(), mkEl("span", "dpb-call", e.method + " " + e.path), sp(), mkEl("span", "dpb-st", String(e.status)), sp(), mkEl("span", "dpb-ms", e.ms + " ms"));
+    log.appendChild(row); dpb.lastSeq = e.seq;
+  });
+  while (log.children.length > 600) log.firstChild.remove();
+  if (atEnd || full) log.scrollTop = log.scrollHeight;
+}
+const SPEEDS = [0.25, 0.5, 1, 2, 4, 8, 16];
+const speedLabel = (v) => v.toLocaleString(locale(), { maximumFractionDigits: 2 }) + "×";
+function speedRender() {
+  const box = $("dpb-speed"); box.querySelectorAll("button").forEach((b) => b.remove());
+  if (!SPEEDS.includes(+deployCfg.speed)) deployCfg.speed = 4;
+  SPEEDS.forEach((v) => {
+    const b = mkEl("button", "dpb-sp" + (v === +deployCfg.speed ? " on" : ""), speedLabel(v)); b.type = "button"; b.setAttribute("aria-pressed", String(v === +deployCfg.speed));
+    b.addEventListener("click", () => {
+      deployCfg.speed = v; lsSet("usecase-deploy", deployCfg);
+      Object.values(simStore).forEach((s) => { s.cloud.speed = v; });   // platí okamžitě i pro rozběhnuté nasazování
+      speedRender();
+    });
+    box.appendChild(b);
+  });
+}
+$("dpb-toggle").addEventListener("click", () => {
+  const bar = $("dpbar"), col = bar.classList.toggle("collapsed"); document.body.classList.toggle("dpb-collapsed", col);
+  $("dpb-toggle").textContent = col ? T("Rozbalit") : T("Sbalit"); $("dpb-toggle").setAttribute("aria-expanded", String(!col));
+});
+
+function renderDeploy(u, list, el) {
+  const sim = simOf(u.id), skip = deploySkip[u.id] || (deploySkip[u.id] = new Set()), save = () => lsSet("usecase-deploy", deployCfg);
+  const vmsAll = DP.expand(list.map((r) => ({ key: r.name + "|" + r.role, name: r.name, role: r.role, count: r.count, ghz: r.ghz, ram: r.ram, disk: r.disk, tier: r.tier })), deployCfg.prefix || u.id);
+  const stOf = (n) => (sim.vms[n] || {}).status || "planned", running = () => sim.run.status === "running";
+  const touched = () => vmsAll.some((v) => stOf(v.name) !== "planned");
+  const box = mkEl("div", "deploy");
+  box.appendChild(mkEl("p", "note", T("Simulace nasazení VM v Business Cloud IaaS. Stránka volá API přímo (stejné kroky a tvary požadavků jako aplikace cloudsigma-interactive), ale proti simulovanému cloudu v prohlížeči: nic se nevytváří a nepotřebují se žádné přihlašovací údaje ani skripty. Barvy ukazují, co je už nasazené a co se právě nasazuje, dole je průběh volání API.")));
+
+  // --- nastavení ---
+  const form = mkEl("div", "dp-form");
+  const lbl = (text, ...kids) => { const l = document.createElement("label"); l.append(mkEl("span", "", text), ...kids); return l; };
+  const prefix = document.createElement("input"); prefix.value = deployCfg.prefix; prefix.placeholder = u.id; prefix.spellcheck = false; prefix.disabled = touched();
+  prefix.title = touched() ? T("Předponu nelze měnit, dokud jsou nějaké VM nasazené (vynulujte simulaci).") : "";
+  prefix.addEventListener("change", () => { deployCfg.prefix = prefix.value; save(); renderDetail(); });
+  // image z knihovny (volání GET libdrives/ proti simulovanému tenantu)
+  const imgL = mkEl("div", "dp-imgfield"), imgShow = mkEl("div", "dp-imgshow"), imgBtn = mkEl("button", "btn dp-imgbtn"), picker = mkEl("div", "dp-pick"); imgBtn.type = "button"; picker.hidden = true;
+  const setImg = () => { imgShow.textContent = deployCfg.image ? (deployCfg.imageName ? deployCfg.imageName + " · " : "") + deployCfg.image : T("Nevybráno"); imgShow.classList.toggle("muted", !deployCfg.image); imgBtn.textContent = deployCfg.image ? T("Změnit image") : T("Vybrat image z knihovny"); };
+  const drawPicker = () => {
+    picker.innerHTML = ""; const items = (sim.lists ? sim.lists.images : []);
+    const search = document.createElement("input"); search.type = "search"; search.className = "dp-search"; search.placeholder = T("Hledat image…");
+    const ul = mkEl("div", "dp-imglist"), close = mkEl("button", "btn", T("Zavřít výběr")); close.type = "button"; close.addEventListener("click", () => { picker.hidden = true; });
+    const draw = () => {
+      ul.innerHTML = ""; const q = search.value.trim().toLowerCase();
+      items.filter((i) => !q || i.name.toLowerCase().includes(q)).forEach((i) => {
+        const b = mkEl("button", "dp-imgitem" + (i.uuid === deployCfg.image ? " on" : "")); b.type = "button";
+        b.append(mkEl("b", "", i.name), mkEl("small", "", fmt(i.size / 1073741824) + " GiB · " + i.uuid.slice(0, 8) + "…"));
+        b.addEventListener("click", () => { deployCfg.image = i.uuid; deployCfg.imageName = i.name; save(); setImg(); picker.hidden = true; update(); }); ul.appendChild(b);
+      });
+    };
+    search.addEventListener("input", draw); draw(); picker.append(mkEl("p", "note", T("Image v knihovně simulovaného tenantu:")), search, ul, close);
+  };
+  imgBtn.addEventListener("click", async () => { picker.hidden = !picker.hidden; if (!picker.hidden) { await simLists(sim); drawPicker(); } });
+  setImg(); imgL.append(mkEl("span", "dp-lbl", T("Image z knihovny")), imgShow, imgBtn);
+  const mkSel = (key, none, items) => { const s = document.createElement("select"); s.add(new Option(none, "")); items.forEach((i) => s.add(new Option(i.name, i.uuid))); s.value = deployCfg[key]; s.addEventListener("change", () => { deployCfg[key] = s.value; save(); }); return s; };
+  const vlanS = mkSel("vlan", T("Bez VLAN"), []), keyS = mkSel("key", T("Bez klíče"), []);
+  const fillSel = () => { [[vlanS, "vlan", T("Bez VLAN"), sim.lists.vlans], [keyS, "key", T("Bez klíče"), sim.lists.keys]].forEach(([s, k, none, items]) => { s.innerHTML = ""; s.add(new Option(none, "")); items.forEach((i) => s.add(new Option(i.name, i.uuid))); s.value = deployCfg[k]; }); };
+  const chk = (key, text) => { const l = mkEl("label", "dp-check"), c = document.createElement("input"); c.type = "checkbox"; c.checked = !!deployCfg[key]; c.addEventListener("change", () => { deployCfg[key] = c.checked; save(); }); l.append(c, document.createTextNode(" " + text)); return l; };
+  const numSel = (key, values, fmtv) => { const s = document.createElement("select"); values.forEach((v) => s.add(new Option(fmtv(v), String(v)))); if (!values.includes(+deployCfg[key])) deployCfg[key] = values[Math.min(2, values.length - 1)]; s.value = String(deployCfg[key]); s.addEventListener("change", () => { deployCfg[key] = +s.value; save(); if (key === "speed") sim.cloud.speed = deployCfg.speed; }); return s; };
+  form.append(lbl(T("Předpona názvu VM"), prefix), imgL, lbl(T("VLAN (volitelně)"), vlanS), lbl(T("SSH klíč (volitelně)"), keyS),
+              lbl(T("Souběžně nasazovaných VM"), numSel("concurrency", [1, 2, 3, 5], String)),
+              chk("start", T("Spustit VM po vytvoření")), chk("failure", T("Simulovat chybu API u jedné VM (klon disku)")));
+  // režim: Simulace (výchozí) / Exekuce (připraveno, zatím vypnuto: ukazuje jen plán volání, nic se neposílá)
+  const live = deployCfg.mode === "live", modeBar = mkEl("div", "dp-modebar");
+  [["sim", "Simulace"], ["live", "Exekuce (připraveno)"]].forEach(([id, label]) => { const b = mkEl("button", "dp-mode" + (deployCfg.mode === id ? " on" : ""), T(label)); b.type = "button"; b.disabled = running(); b.addEventListener("click", () => { deployCfg.mode = id; save(); renderDetail(); }); modeBar.appendChild(b); });
+  box.insertBefore(modeBar, box.children[1] || null);
+  if (live) {
+    box.appendChild(mkEl("p", "dp-warn", "⚠ " + T("Režim Exekuce je připravený, ale vypnutý: žádná volání se neposílají a nic se nevytváří. Tlačítko Deploy zatím jen zobrazí plán volání (dry-run). Exekuce má běžet přes MCP server; ten ale zatím umí jen čtení a start/stop/restart VM, pro vytvoření VM, klon, zvětšení a připojení disku nástroje chybí. Přihlašovací údaje drží MCP server, v prohlížeči se neukládají.")));
+    const pu = document.createElement("input"); pu.value = deployCfg.liveUrl; pu.placeholder = "https://…/mcp"; pu.spellcheck = false; pu.addEventListener("change", () => { deployCfg.liveUrl = pu.value.trim(); save(); });
+    const cf = document.createElement("input"); cf.disabled = true; cf.placeholder = T("zatím nepoužito"); cf.title = T("Potvrzení ostrého nasazení bude vyžadováno až při zapnutí exekuce.");
+    form.append(lbl(T("Adresa MCP serveru (zatím nepoužito)"), pu), lbl(T("Potvrzení ostrého nasazení"), cf));
+  }
+  box.append(form, picker);
+
+  // --- legenda ---
+  const legend = mkEl("div", "sim-legend");
+  ["planned", "queued", "deploying", "deployed", "failed", "excluded"].forEach((s) => { const i = mkEl("span", "sim-key"); i.append(mkEl("i", "sim-sw st-" + s), document.createTextNode(T(SIM_ST[s]))); legend.appendChild(i); });
+  box.append(legend, mkEl("p", "note", T("Klikněte na VM pro vyřazení z nasazení (nebo návrat). Nasazené VM zůstávají zelené.")));
+
+  // --- topologie: INTERNET -> WAN -> skupiny s kartami VM ---
+  const topo = mkEl("div", "sim-topo"), top = mkEl("div", "sim-top"), cols = mkEl("div", "sim-cols");
+  top.append(mkEl("div", "sim-internet", "INTERNET"), mkEl("span", "sim-arrow", "→"), mkEl("div", "sim-wan", "WAN"));
+  const groups = new Map(); vmsAll.forEach((v) => { const c = catOf(v.role); if (!groups.has(c)) groups.set(c, []); groups.get(c).push(v); });
+  const order = SIM_COLS.map((c) => c[0]).filter((c) => groups.has(c)).concat([...groups.keys()].filter((c) => !SIM_COLS.some((x) => x[0] === c)));
+  const cards = [], groupBtns = [];
+  order.forEach((cat) => {
+    const members = groups.get(cat), tag = (SIM_COLS.find((x) => x[0] === cat) || [cat, cat])[1];
+    const col = mkEl("div", "sim-col"), grp = mkEl("div", "sim-group"), head = mkEl("div", "sim-ghead"), gb = mkEl("button", "btn primary dp-row", "Deploy"); gb.type = "button";
+    gb.addEventListener("click", () => start(new Set(members.map((v) => v.name)))); groupBtns.push({ members, gb });
+    head.append(mkEl("b", "", T(cat)), mkEl("small", "", T("{n} VM", { n: members.length })), gb); grp.appendChild(head);
+    members.forEach((v) => {
+      const card = mkEl("div", "sim-vm"), badge = mkEl("span", "sim-badge"), det = mkEl("div", "sim-det"), dots = Deployer.STEPS.map(() => mkEl("i", "trk-dot")), steps = mkEl("div", "trk-steps");
+      card.tabIndex = 0; card.setAttribute("role", "button");
+      const top1 = mkEl("div", "sim-vtop"); top1.append(mkEl("b", "", v.name), badge); steps.append(...dots);
+      card.append(top1, mkEl("div", "sim-sub", trRole(v.role)), mkEl("div", "sim-spec", T("CPU {c} GHz · RAM {r} GiB · Disk {d} GB · {t}", { c: fmt(v.ghz_actual), r: fmt(v.mem_bytes / 1073741824), d: v.disk_gib, t: v.disk_tier })), steps, det);
+      const toggle = () => { if (stOf(v.name) !== "planned" || running()) return; if (skip.has(v.name)) skip.delete(v.name); else skip.add(v.name); update(); };
+      card.addEventListener("click", toggle); card.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); toggle(); } });
+      grp.appendChild(card); cards.push({ v, card, badge, dots, det });
+    });
+    col.append(mkEl("div", "sim-tab", tag), grp); cols.appendChild(col);
+  });
+  topo.append(top, cols); box.appendChild(topo);
+
+  // --- ovládání a zprávy ---
+  const actions = mkEl("div", "actions"), go = mkEl("button", "btn primary dp-go"), stop = mkEl("button", "btn", T("Zastavit")), reset = mkEl("button", "btn danger", T("Vynulovat simulaci"));
+  [go, stop, reset].forEach((b) => { b.type = "button"; }); actions.append(go, stop, reset); const msgs = document.createElement("div"), planBox = mkEl("div", "dp-plan"); box.append(actions, msgs, planBox);
+  go.addEventListener("click", () => start(null));
+  stop.addEventListener("click", () => { if (sim.run.handle) { sim.run.handle.halt(); stop.disabled = true; } });
+  reset.addEventListener("click", () => { if (running()) return; delete simStore[u.id]; simForget(u.id); skip.clear(); renderDetail(); dpbRender(true); });
+
+  const opts = () => ({ image: deployCfg.image, vlan: deployCfg.vlan, key: deployCfg.key, start: !!deployCfg.start, concurrency: deployCfg.concurrency, sleep: sim.cloud.sleep, pollMs: 1000, maxPolls: 120 });
+  const eligible = (only) => vmsAll.filter((v) => !skip.has(v.name) && stOf(v.name) === "planned" && (!only || only.has(v.name)));
+  const validate = (vms) => DP.validate({ image: deployCfg.image, vlan: deployCfg.vlan, key: deployCfg.key }, vms);
+  // dry-run režimu Exekuce: vypíše volání, která by se provedla; nic neodesílá
+  function showPlan(vms) {
+    planBox.innerHTML = ""; const o = opts(), plans = vms.map((v) => [v, Deployer.plan(v, o)]), total = plans.reduce((s, [, p]) => s + p.length, 0);
+    planBox.appendChild(mkEl("h3", "", T("Plán exekuce (dry-run)")));
+    planBox.appendChild(mkEl("p", "note", T("{n} VM, {c} volání API. Nic se neodeslalo.", { n: vms.length, c: total })));
+    const all = plans.flatMap(([, p]) => p), cov = all.filter((c) => Deployer.mcpCall(c)).length, miss = [...new Set(all.filter((c) => !Deployer.mcpCall(c)).map((c) => c.step))];
+    planBox.appendChild(mkEl("p", miss.length ? "dp-warn" : "note", (miss.length ? "⚠ " : "") + T("MCP server pokrývá {a} z {b} volání; chybí nástroje pro kroky: {m}.", { a: cov, b: all.length, m: miss.join(", ") || "–" })));
+    plans.forEach(([v, p], i) => {
+      const d = mkEl("details", "doc-sub"); d.open = i === 0; d.appendChild(mkEl("summary", "", v.name + " – " + p.length + " " + T("volání")));
+      d.appendChild(mkEl("pre", "dp-out", p.map((c, k) => (k + 1) + ". " + c.method + " " + c.path + (c.note ? "   # " + c.note : "") + (c.body ? "\n   " + JSON.stringify(c.body) : "") + "\n   MCP: " + (Deployer.mcpCall(c) ? JSON.stringify(Deployer.mcpCall(c).params) : "⚠ " + T("chybí nástroj v MCP serveru"))).join("\n"))); planBox.appendChild(d);
+    });
+    const run = mkEl("button", "btn primary", T("Spustit exekuci")); run.type = "button"; run.disabled = !Deployer.LIVE_ENABLED; run.title = T("Exekuce zatím není zapnutá.");
+    const dlb = mkEl("button", "btn", T("Stáhnout plán (JSON)")); dlb.type = "button";
+    dlb.addEventListener("click", () => { const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([JSON.stringify({ usecase: u.id, vms: plans.map(([v, p]) => ({ name: v.name, calls: p.map((c) => ({ step: c.step, api: c.method + " " + c.path, body: c.body, mcp: Deployer.mcpCall(c) })) })) }, null, 2)], { type: "application/json" })); a.download = "plan-exekuce-" + u.id + ".json"; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 1000); });
+    const ab = mkEl("div", "actions"); ab.append(run, dlb); planBox.appendChild(ab);
+  }
+  function start(only) {
+    if (running()) return;
+    const vms = eligible(only), val = validate(vms); if (val.errors.length) { update(); return; }
+    if (deployCfg.mode === "live") { showPlan(vms); return; }
+    vms.forEach((v) => { sim.vms[v.name] = { status: "queued", steps: {}, uuids: {}, error: "", current: "" }; });
+    if (deployCfg.failure) sim.cloud.failOn = { vm: vms[Math.min(2, vms.length - 1)].name, step: "clone" };
+    sim.cloud.speed = deployCfg.speed; sim.run = { status: "running", started: Date.now(), ended: null, handle: null };
+    const doc = docVmStart(u, vms, sim);
+    const live = () => { simPersist(sim); if (simUi && simUi.id === u.id) simUi.update(); dpbRender(); };
+    const hooks = {
+      vm: (n, st, msg) => { const s = sim.vms[n]; s.status = st; if (st === "failed") s.error = msg || ""; if (st !== "deploying") s.current = ""; live(); },
+      step: (n, step, st, detail, uuid) => { const s = sim.vms[n]; s.steps[step] = { status: st, detail: detail || "" }; if (uuid) s.uuids[step] = uuid; if (st === "running") s.current = step; live(); }
+    };
+    sim.run.handle = Deployer.start(simApi(sim), vms, opts(), hooks);
+    sim.run.handle.done.then((out) => {
+      out.notStarted.forEach((n) => { sim.vms[n].status = "planned"; }); sim.run.status = out.status; sim.run.ended = Date.now(); docVmFinish(doc, out, sim);
+      const injected = deployCfg.failure; sim.cloud.failOn = null;
+      if (injected) { deployCfg.failure = false; save(); }          // simulovaná chyba je jednorázová, další běh už proběhne bez ní
+      live(); if (injected && simUi && simUi.id === u.id && state.mode === "deploy") renderDetail();
+    });
+    live();
+  }
+
+  // --- aktualizace barev a ovládacích prvků podle stavu ---
+  function update() {
+    cards.forEach(({ v, card, badge, dots, det }) => {
+      const base = stOf(v.name), eff = skip.has(v.name) && base === "planned" ? "excluded" : base, s = sim.vms[v.name];
+      card.className = "sim-vm st-" + eff; badge.textContent = T(SIM_ST[eff]); card.setAttribute("aria-label", v.name + ": " + T(SIM_ST[eff]));
+      dots.forEach((d, i) => { const k = Deployer.STEPS[i], x = s && s.steps[k], st = x ? x.status : "pending"; d.className = "trk-dot s-" + st; d.title = T(SIM_STEP[k]) + ": " + T(SIM_STEP_ST[st]) + (x && x.detail ? " – " + x.detail : "") + (s && s.uuids[k] ? " (" + s.uuids[k] + ")" : ""); });
+      det.textContent = s && s.error ? "⚠ " + s.error : s && s.current ? "⏳ " + T(SIM_STEP[s.current]) : "";
+    });
+    sim.view = vmsAll.filter((v) => !(skip.has(v.name) && stOf(v.name) === "planned")).map((v) => v.name);
+    const el1 = eligible(null), val = validate(el1), doneCount = vmsAll.filter((v) => stOf(v.name) === "deployed").length;
+    go.disabled = running() || val.errors.length > 0; go.textContent = deployCfg.mode === "live" ? T("Zobrazit plán exekuce (dry-run) ({n})", { n: el1.length }) : T("Deploy do Business Cloud IaaS – simulace ({n})", { n: el1.length });
+    stop.disabled = !running() || (sim.run.handle && false); reset.disabled = running();
+    groupBtns.forEach(({ members, gb }) => { const e = eligible(new Set(members.map((v) => v.name))); gb.disabled = running() || !e.length || val.errors.some((x) => x.code === "image"); });
+    msgs.innerHTML = ""; const errs = val.errors.filter((e) => e.code !== "none");
+    errs.forEach((e) => msgs.appendChild(mkEl("p", "dp-err", "⚠ " + deployMsg(e))));
+    if (val.errors.some((e) => e.code === "none") && (doneCount || sim.view.some((n) => stOf(n) === "failed"))) msgs.appendChild(mkEl("p", "dp-ok", T("Všechny vybrané VM jsou už nasazené nebo mají chybu.")));
+    val.warnings.forEach((e) => msgs.appendChild(mkEl("p", "dp-warn", "ℹ " + deployMsg(e))));
+    dpbRender();
+  }
+  simUi = { id: u.id, update };
+  simLists(sim).then(() => { if (box.isConnected) { fillSel(); } }).catch(() => {});
+  update(); el.appendChild(box);
+}
+
+// --- Deploy Kubernetes: simulace instalace clusteru na nasazené VM (postup aplikace cloudsigma-interactive) ---
+// Stránka nic nespouští a k žádné VM se nepřipojuje: příkazy a výstupy jsou simulované (k8sinstall.js).
+const k8sCfg = Object.assign({ version: "v1.35", podCidr: "192.168.0.0/16", grafana: true, hello: true, concurrency: 5, failure: "" }, lsGet("usecase-k8s") || {});
+const k8sStore = {};
+let k8sUi = null;
+const K8S_CP = new Set(["etcd", "control-plane", "master"]), K8S_WK = new Set(["worker"]), CALICO = "v3.30.4";
+const K8S_PHASES = [["nodes", "Příprava uzlů"], ["control", "Control plane"], ["cni", "CNI (Calico)"], ["workers", "Připojení workerů"], ["verify", "Ověření"], ["addons", "Add-ony"]];
+const K8S_STEP = { prepare: "Příprava OS", runtime: "containerd", packages: "kubeadm, kubelet, kubectl", join: "Připojení do clusteru (init / join)", ready: "Uzel Ready" };
+const K8S_ST = { planned: "plánováno", queued: "ve frontě", installing: "instaluje se", ready: "připraveno", failed: "chyba", stopped: "přerušeno" };
+const K8S_CLS = { planned: "planned", queued: "queued", installing: "deploying", ready: "deployed", failed: "failed", stopped: "stopped" };
+function k8sPersist(id, k) { persistLater("k8s", () => { const o = lsGet("usecase-k8s-state") || {}; o[id] = { nodes: k.nodes, phases: k.phases, info: k.info, log: k.log.slice(-200), seq: k.seq, run: { status: k.run.status, started: k.run.started, ended: k.run.ended } }; lsSet("usecase-k8s-state", o); }); }
+function k8sForget(id) { clearTimeout(persistT.k8s); const o = lsGet("usecase-k8s-state") || {}; delete o[id]; lsSet("usecase-k8s-state", o); delete k8sSaved[id]; }
+function k8sOf(id) {
+  if (!k8sStore[id]) {
+    const k = { id, nodes: {}, phases: {}, log: [], seq: 0, view: [], info: null, run: { status: "idle", handle: null, started: null, ended: null } }, sv = k8sSaved[id];
+    if (sv) {
+      k.nodes = sv.nodes || {}; k.phases = sv.phases || {}; k.info = sv.info; k.log = revive(sv.log); k.seq = sv.seq || 0;
+      k.run = { status: sv.run.status === "running" ? "stopped" : sv.run.status, handle: null, started: sv.run.started, ended: sv.run.ended || (sv.run.status === "running" ? Date.now() : null) };
+      Object.values(k.nodes).forEach((v) => { if (v.status === "queued") v.status = "planned"; else if (v.status === "installing") v.status = "stopped"; });
+      Object.keys(k.phases).forEach((p) => { if (k.phases[p].status === "running") k.phases[p].status = "stopped"; });
+    }
+    k8sStore[id] = k;
+  }
+  return k8sStore[id];
+}
+// uzly clusteru podle scénáře: řádky etcd / control-plane = control plane, worker = workery; názvy stejné jako v Deployment módu
+function k8sPlan(u, list) {
+  const rows = list.map((r) => ({ key: r.name + "|" + r.role, name: r.name, role: r.role, count: r.count, ghz: r.ghz, ram: r.ram, disk: r.disk, tier: r.tier }));
+  const cpKeys = new Set(rows.filter((r) => K8S_CP.has(r.name)).map((r) => r.key)), wkKeys = new Set(rows.some((r) => K8S_WK.has(r.name)) ? rows.filter((r) => K8S_WK.has(r.name)).map((r) => r.key) : rows.filter((r) => ["Aplikační", "Databázové"].includes(catOf(r.role)) && !cpKeys.has(r.key)).map((r) => r.key));
+  const vms = DP.expand(rows, deployCfg.prefix || u.id), cp = vms.filter((v) => cpKeys.has(v.row)), wk = vms.filter((v) => wkKeys.has(v.row));
+  return { control: cp.map((v, i) => ({ name: v.name, ip: "192.168.1." + (101 + i), vm: v })), workers: wk.map((v, i) => ({ name: v.name, ip: "192.168.1." + (111 + i), vm: v })),
+           others: vms.filter((v) => !cpKeys.has(v.row) && !wkKeys.has(v.row)), vms };
+}
+function k8sCounts(k) {
+  const c = { total: k.view.length, ready: 0, installing: 0, failed: 0, steps: 0, phases: 0 };
+  k.view.forEach((n) => { const v = k.nodes[n]; if (!v) return; if (v.status === "ready") c.ready++; else if (v.status === "installing") c.installing++; else if (v.status === "failed") c.failed++; c.steps += K8sInstaller.NODE_STEPS.filter((s) => v.steps[s] && v.steps[s].status === "ok").length; });
+  c.phases = K8sInstaller.PHASES.filter((p) => k.phases[p] && ["ok", "skipped"].includes(k.phases[p].status)).length;
+  c.pct = c.total ? Math.round(100 * (c.steps + c.phases) / (c.total * K8sInstaller.NODE_STEPS.length + K8sInstaller.PHASES.length)) : 0;
+  return c;
+}
+
+function renderK8s(u, list, el) {
+    const implicit = !list.some((r) => K8S_WK.has(r.name));   // bez řádku "worker" jsou workery VM skupin Aplikační a Databázové
+  const k = k8sOf(u.id), save = () => lsSet("usecase-k8s", k8sCfg), plan = k8sPlan(u, list), all = plan.control.concat(plan.workers);
+  const running = () => k.run.status === "running", box = mkEl("div", "deploy");
+  box.appendChild(mkEl("p", "note", T("Simulace instalace Kubernetes na nasazené VM podle postupu aplikace cloudsigma-interactive: příprava uzlů, containerd, kubeadm/kubelet/kubectl, kubeadm init, Calico, kubeadm join workerů, ověření a add-ony. Příkazy a výstupy jsou simulované: k žádné VM se nepřipojuje a nic se nespouští.")));
+  if (!all.length) { box.appendChild(mkEl("p", "dp-warn", "ℹ " + T("Tento scénář neobsahuje pracovní uzly Kubernetes (worker)."))); el.appendChild(box); k.view = []; k8sUi = { id: u.id, update: () => {} }; return; }
+  if (implicit) box.appendChild(mkEl("p", "dp-warn", "ℹ " + T("Tento scénář nemá řádek worker; za worker uzly se berou VM skupin Aplikační a Databázové ({n} VM).", { n: plan.workers.length })));
+  k.view = all.map((n) => n.name);
+
+  // --- nastavení ---
+  const form = mkEl("div", "dp-form"), lbl = (text, ...kids) => { const l = document.createElement("label"); l.append(mkEl("span", "", text), ...kids); return l; };
+  const sel = (key, items, fmtv) => { const s = document.createElement("select"); items.forEach((v) => s.add(new Option(fmtv ? fmtv(v) : String(v), String(v)))); if (!items.map(String).includes(String(k8sCfg[key]))) k8sCfg[key] = items[0]; s.value = String(k8sCfg[key]); s.addEventListener("change", () => { k8sCfg[key] = typeof items[0] === "number" ? +s.value : s.value; save(); update(); }); return s; };
+  const cidr = document.createElement("input"); cidr.value = k8sCfg.podCidr; cidr.spellcheck = false; cidr.addEventListener("input", () => { k8sCfg.podCidr = cidr.value.trim(); save(); update(); });
+  const chk = (key, text) => { const l = mkEl("label", "dp-check"), c = document.createElement("input"); c.type = "checkbox"; c.checked = !!k8sCfg[key]; c.addEventListener("change", () => { k8sCfg[key] = c.checked; save(); }); l.append(c, document.createTextNode(" " + text)); return l; };
+  const fails = ["", "apt", "join", "cni"], failLabel = { "": "Žádná", apt: "apt: balíčky Kubernetes nenalezeny (jeden uzel)", join: "kubeadm join workeru: timeout API", cni: "Calico: stav Degraded" };
+  form.append(lbl(T("Verze Kubernetes"), sel("version", ["v1.35", "v1.34", "v1.33"])), lbl(T("Pod CIDR"), cidr), lbl(T("Souběžně instalovaných uzlů"), sel("concurrency", [1, 2, 3, 5, 8])),
+              lbl(T("Simulovat chybu"), sel("failure", fails, (v) => T(failLabel[v]))), chk("grafana", T("Grafana + dashboardy")), chk("hello", T("Hello World demo")));
+  box.append(form, mkEl("p", "note", T("Calico {v}. Původní aplikace HA control plane neautomatizuje (jen první uzel dostane kubeadm init). Simulace další control-plane uzly přidá přes kubeadm join --control-plane.", { v: CALICO })));
+
+  // --- fáze, legenda, uzly ---
+  const phases = mkEl("div", "k8s-ph"), phEls = {};
+  K8S_PHASES.forEach(([id, label], i) => { if (i) phases.appendChild(mkEl("span", "sim-arrow", "→")); const p = mkEl("span", "ph", (i + 1) + ". " + T(label)); phEls[id] = p; phases.appendChild(p); });
+  const legend = mkEl("div", "sim-legend");
+  Object.keys(K8S_ST).forEach((s) => { const i = mkEl("span", "sim-key"); i.append(mkEl("i", "sim-sw st-" + K8S_CLS[s]), document.createTextNode(T(K8S_ST[s]))); legend.appendChild(i); });
+  { const i = mkEl("span", "sim-key"); i.append(mkEl("i", "sim-sw st-excluded"), document.createTextNode(T("mimo cluster"))); legend.appendChild(i); }
+  box.append(phases, legend, mkEl("p", "note", T("Kubernetes se instaluje jen na uzly etcd/control-plane a worker; ostatní VM (firewall, databáze, provoz...) zůstávají beze změny. Workery se připojují ke control plane přes kubeadm join.")));
+  const topo = mkEl("div", "sim-topo"), top = mkEl("div", "sim-top"), cols = mkEl("div", "sim-cols"), cards = [], byName = new Map(all.map((n) => [n.name, n])), apiEp = plan.control[0].ip + ":6443";
+  top.append(mkEl("div", "sim-internet", "INTERNET"), mkEl("span", "sim-arrow", "→"), mkEl("div", "sim-wan", "WAN"));
+  const groups = new Map(); plan.vms.forEach((v) => { const c = catOf(v.role); if (!groups.has(c)) groups.set(c, []); groups.get(c).push(v); });
+  const order = SIM_COLS.map((c) => c[0]).filter((c) => groups.has(c)).concat([...groups.keys()].filter((c) => !SIM_COLS.some((x) => x[0] === c)));
+  order.forEach((cat) => {
+    const members = groups.get(cat), tag = (SIM_COLS.find((x) => x[0] === cat) || [cat, cat])[1], col = mkEl("div", "sim-col"), grp = mkEl("div", "sim-group"), head = mkEl("div", "sim-ghead");
+    head.append(mkEl("b", "", T(cat)), mkEl("small", "", T("{n} VM", { n: members.length }))); grp.appendChild(head);
+    members.forEach((v) => {
+      const n = byName.get(v.name), card = mkEl("div", "sim-vm" + (n ? "" : " st-excluded")), t1 = mkEl("div", "sim-vtop"), badge = mkEl("span", "sim-badge");
+      t1.append(mkEl("b", "", v.name), badge);
+      const isCp = n && plan.control.includes(n), kind = !n ? T("mimo Kubernetes (VM bez balíčku)") : isCp ? "control-plane · " + n.ip : "worker · " + n.ip + " → " + apiEp;
+      card.append(t1, mkEl("div", "sim-sub", trRole(v.role)), mkEl("div", "sim-spec", T("CPU {c} GHz · RAM {r} GiB · Disk {d} GB · {t}", { c: fmt(v.ghz_actual), r: fmt(v.mem_bytes / 1073741824), d: v.disk_gib, t: v.disk_tier })), mkEl("div", "sim-sub", kind));
+      if (!n) { badge.textContent = T("vyřazeno"); card.setAttribute("aria-label", v.name + ": " + T("vyřazeno")); grp.appendChild(card); return; }
+      const det = mkEl("div", "sim-det"), vmst = mkEl("div", "sim-sub"), dots = K8sInstaller.NODE_STEPS.map(() => mkEl("i", "trk-dot")), steps = mkEl("div", "trk-steps"); steps.append(...dots);
+      card.append(vmst, steps, det); grp.appendChild(card); cards.push({ n, card, badge, dots, det, vmst });
+    });
+    col.append(mkEl("div", "sim-tab", tag), grp); cols.appendChild(col);
+  });
+  topo.append(top, cols); box.appendChild(topo);
+
+  // --- ovládání, zprávy, výsledek ---
+  const actions = mkEl("div", "actions"), go = mkEl("button", "btn primary dp-go"), stop = mkEl("button", "btn", T("Zastavit")), reset = mkEl("button", "btn danger", T("Vynulovat simulaci"));
+  [go, stop, reset].forEach((b) => { b.type = "button"; }); actions.append(go, stop, reset);
+  const msgs = document.createElement("div"), result = mkEl("div", "dp-handoff"); result.hidden = true; box.append(actions, msgs, result);
+  go.addEventListener("click", () => start());
+  stop.addEventListener("click", () => { if (k.run.handle) { k.run.handle.halt(); stop.disabled = true; } });
+  reset.addEventListener("click", () => { if (running()) return; delete k8sStore[u.id]; k8sForget(u.id); renderDetail(); dpbRender(true); });
+
+  const valid = () => /^\d{1,3}(\.\d{1,3}){3}\/([0-9]|[12]\d|3[0-2])$/.test(k8sCfg.podCidr);
+  function start() {
+    if (running() || k.run.status !== "idle" || !valid()) return;
+    all.forEach((n) => { k.nodes[n.name] = { status: "queued", steps: {}, error: "", current: "" }; });
+    K8sInstaller.PHASES.forEach((p) => { k.phases[p] = { status: "pending", detail: "" }; });
+    k.run = { status: "running", started: Date.now(), ended: null, handle: null }; k.info = null;
+    const doc = docK8sStart(u, plan, k);
+    const live = () => { k8sPersist(u.id, k); if (k8sUi && k8sUi.id === u.id) k8sUi.update(); dpbRender(); };
+    const push = (e) => { e.seq = ++k.seq; k.log.push(e); if (k.log.length > 600) k.log.shift(); };
+    const hooks = {
+      node: (n, st, msg) => { const v = k.nodes[n]; v.status = st; if (st === "failed") v.error = msg || ""; live(); },
+      step: (n, s, st, d) => { const v = k.nodes[n]; v.steps[s] = { status: st, detail: d || "" }; if (st === "running") v.current = s; else if (st === "failed") v.error = d || ""; live(); },
+      phase: (p, st, d) => { k.phases[p] = { status: st, detail: d || "" }; live(); },
+      log: (e) => { push(e.out !== undefined ? { t: new Date(), tag: e.tag, out: e.out, ok: true } : { t: new Date(), tag: e.tag, method: "$", path: e.cmd, status: "rc " + e.rc, ms: e.ms, ok: e.rc === 0 }); dpbRender(); }
+    };
+    const calicoPlan = { control: plan.control, workers: plan.workers };
+    k.run.handle = K8sInstaller.start(calicoPlan, { version: k8sCfg.version, podCidr: k8sCfg.podCidr, calico: CALICO, addons: { grafana: !!k8sCfg.grafana, hello: !!k8sCfg.hello }, concurrency: k8sCfg.concurrency, failure: k8sCfg.failure,
+      sleep: (ms) => new Promise((r) => setTimeout(r, ms / deployCfg.speed)) }, hooks);
+    k.run.handle.done.then((out) => {
+      Object.values(k.nodes).forEach((v) => { if (v.status === "queued") v.status = "planned"; else if (v.status === "installing") v.status = "stopped"; });
+      Object.keys(k.phases).forEach((p) => { if (k.phases[p].status === "running") k.phases[p].status = "stopped"; });
+      k.run.status = out.status; k.run.ended = Date.now(); k.info = out; docK8sFinish(doc, out, k);
+      const injected = k8sCfg.failure; if (injected) { k8sCfg.failure = ""; save(); }
+      live(); if (injected && k8sUi && k8sUi.id === u.id && state.mode === "k8s") renderDetail();
+    });
+    live();
+  }
+
+  function update() {
+    const dep = simStore[u.id];
+    cards.forEach(({ n, card, badge, dots, det, vmst }) => {
+      const v = k.nodes[n.name], st = v ? v.status : "planned";
+      card.className = "sim-vm st-" + K8S_CLS[st]; badge.textContent = T(K8S_ST[st]); card.setAttribute("aria-label", n.name + ": " + T(K8S_ST[st]));
+      dots.forEach((d, i) => { const s = K8sInstaller.NODE_STEPS[i], x = v && v.steps[s], sst = x ? x.status : "pending"; d.className = "trk-dot s-" + sst; d.title = T(K8S_STEP[s]) + ": " + T(SIM_STEP_ST[sst] || sst) + (x && x.detail ? " – " + x.detail : ""); });
+      det.textContent = v && v.error ? "⚠ " + v.error : v && v.current && st === "installing" ? "⏳ " + T(K8S_STEP[v.current]) : "";
+      const deployed = dep && dep.vms[n.name] && dep.vms[n.name].status === "deployed"; vmst.textContent = T("VM: {s}", { s: deployed ? T("nasazena v simulaci") : T("nenasazena") });
+    });
+    K8S_PHASES.forEach(([id]) => { const p = k.phases[id], st = p ? p.status : "pending"; phEls[id].className = "ph s-" + st; phEls[id].title = p && p.detail ? p.detail : ""; });
+    const idle = k.run.status === "idle", ok = valid();
+    go.disabled = !idle || !ok; go.textContent = T("Deploy Kubernetes – simulace"); stop.disabled = !running(); reset.disabled = running();
+    msgs.innerHTML = ""; if (!ok) msgs.appendChild(mkEl("p", "dp-err", "⚠ " + T("Pod CIDR není platný (např. 192.168.0.0/16).")));
+    if (!idle && !running()) msgs.appendChild(mkEl("p", "note", T("kubeadm nelze bezpečně opakovat na už nakonfigurovaných uzlech; po dokončení nebo přerušení použijte Vynulovat simulaci.")));
+    if (k.run.status === "failed" && k.info && k.info.failed) msgs.appendChild(mkEl("p", "dp-err", "⚠ " + k.info.failed.name + ": " + k.info.failed.message));
+    result.hidden = !(k.run.status === "ok" && k.info); result.innerHTML = "";
+    if (!result.hidden) {
+      result.appendChild(mkEl("b", "", T("Cluster je připraven")));
+      result.appendChild(mkEl("p", "note", T("Výstup kubectl get nodes (simulace):")));
+      result.appendChild(mkEl("pre", "dp-out", ["NAME                      STATUS  ROLES          VERSION   INTERNAL-IP"].concat(k.info.nodes.map((n) => n.name.padEnd(26) + "Ready   " + (n.role === "worker" ? "<none>        " : "control-plane ") + " " + n.version.padEnd(9) + " " + n.ip)).join("\n")));
+      k.info.addons.forEach((a) => result.appendChild(mkEl("p", "note", (a.id === "grafana" ? T("Grafana (ClusterIP, zvenčí nedostupná): ") : T("Hello World (ClusterIP): ")) + a.note)));
+    }
+    dpbRender();
+  }
+  k8sUi = { id: u.id, update };
+  update(); el.appendChild(box);
+}
+
+// --- Samoopravy: simulace samoopravného nástroje pro nasazený Kubernetes (zdraví, incidenty, důležité události) ---
+// Nic se nespouští a k žádnému clusteru se nepřipojuje; incidenty, příkazy i události jsou simulované (selfheal.js).
+const healCfg = Object.assign({ auto: true, chaos: false, filter: "important", type: "random" }, lsGet("usecase-heal") || {});
+const healStore = {};
+let healUi = null;
+const HEAL_ST = { open: "otevřený", diagnosing: "diagnostika", fixing: "oprava", verifying: "ověřování", escalated: "čeká na zásah", resolved: "vyřešeno" };
+const HEAL_SEV = { critical: "kritický", major: "závažný", minor: "mírný" };
+const HEAL_NODE = { healthy: "zdravý", degraded: "problém", down: "nedostupný" };
+const HEAL_NCLS = { healthy: "deployed", degraded: "deploying", down: "failed" };
+function healOf(u, plan) {
+  const nodes = plan.control.map((n) => ({ name: n.name, role: "control", ip: n.ip })).concat(plan.workers.map((n) => ({ name: n.name, role: "worker", ip: n.ip }))), key = nodes.map((n) => n.name).join(",");
+  let s = healStore[u.id];
+  if (s && s.key !== key) { clearTimeout(s.timer); s.eng.halt(); s = null; }
+  if (!s) {
+    s = healStore[u.id] = { key, nodes, chat: [], log: [], seq: 0, tick: 0, exp: new Set(), view: nodes.map((n) => n.name), timer: null, run: { status: "idle", started: null, ended: null } };
+    s.eng = SelfHeal.create({ nodes, auto: healCfg.auto, seed: 5, sleep: (ms) => new Promise((r) => setTimeout(r, ms / deployCfg.speed)),
+      hooks: { change: () => { if (healUi && healUi.id === u.id) healUi.update(); dpbRender(); },
+        log: (e) => { const x = e.out !== undefined ? { t: new Date(), tag: e.tag, out: e.out, ok: true } : { t: new Date(), tag: e.tag, method: "$", path: e.cmd, status: "rc " + e.rc, ms: e.ms, ok: e.rc === 0 }; x.seq = ++s.seq; s.log.push(x); if (s.log.length > 600) s.log.shift(); dpbRender(); } } });
+  }
+  return s;
+}
+function healChaos(s) {
+  clearTimeout(s.timer); s.timer = null;
+  if (s.run.status !== "running" || !healCfg.chaos) return;
+  s.timer = setTimeout(() => {
+    if (s.run.status !== "running" || !healCfg.chaos) return;
+    if (s.tick++ % 2 === 0 && s.eng.open().length < 3) s.eng.inject("random"); else s.eng.noise();
+    healChaos(s);
+  }, (6500 + Math.random() * 3000) / deployCfg.speed);
+}
+
+function renderHeal(u, list, el) {
+  const plan = k8sPlan(u, list), all = plan.control.concat(plan.workers), box = mkEl("div", "deploy"), save = () => lsSet("usecase-heal", healCfg);
+  box.appendChild(mkEl("p", "note", T("Simulace provozního asistenta pro nasazený Kubernetes: sleduje zdraví uzlů a podů, zobrazuje dashboardy Grafana a Kibana, detekuje incidenty, sám je diagnostikuje a opravuje a zobrazuje důležité události. Úkoly mu můžete zadat v chatu Provozní požadavky (např. „Oprav aplikaci web“). Dashboardy, incidenty, příkazy i události jsou simulované: k žádnému clusteru se nepřipojuje a nic se nespouští.")));
+  if (!all.length) { box.appendChild(mkEl("p", "dp-warn", "ℹ " + T("Tento scénář neobsahuje pracovní uzly Kubernetes (worker)."))); el.appendChild(box); healUi = { id: u.id, update: () => {} }; return; }
+  const s = healOf(u, plan), eng = s.eng, running = () => s.run.status === "running", stopped = () => s.run.status === "stopped";
+  const begin = () => { if (s.run.status === "idle") { s.run = { status: "running", started: Date.now(), ended: null }; healChaos(s); } };
+  s.begin = begin;
+
+  // --- ovládání ---
+  const ctl = mkEl("div", "dp-form"), chk = (key, text, fn) => { const l = mkEl("label", "dp-check"), c = document.createElement("input"); c.type = "checkbox"; c.checked = !!healCfg[key]; c.addEventListener("change", () => { healCfg[key] = c.checked; save(); fn(c.checked); }); l.append(c, document.createTextNode(" " + text)); return l; };
+  const typeSel = document.createElement("select"); typeSel.add(new Option(T("Náhodný incident"), "random")); Object.keys(SelfHeal.TYPES).forEach((k) => typeSel.add(new Option(k + " – " + T(SelfHeal.TYPES[k].title.replace(/ \{.*$/, "").replace(/ na uzlu.*$/, "")), k)));
+  typeSel.value = healCfg.type; typeSel.addEventListener("change", () => { healCfg.type = typeSel.value; save(); });
+  const inj = mkEl("button", "btn", T("Vložit incident")); inj.type = "button";
+  inj.addEventListener("click", () => { begin(); eng.inject(healCfg.type); draw(); });
+  const tl = document.createElement("label"); tl.append(mkEl("span", "", T("Typ incidentu")), typeSel);
+  ctl.append(tl, chk("auto", T("Automatické opravy"), (v) => eng.setAuto(v)), chk("chaos", T("Náhodné incidenty"), () => healChaos(s)));
+  const actions = mkEl("div", "actions"), go = mkEl("button", "btn primary dp-go"), stop = mkEl("button", "btn", T("Zastavit")), reset = mkEl("button", "btn danger", T("Vynulovat simulaci"));
+  [go, stop, reset, inj].forEach((b) => { b.type = "button"; }); actions.append(go, inj, stop, reset);
+  go.addEventListener("click", () => { begin(); draw(); dpbRender(); });
+  stop.addEventListener("click", () => { eng.halt(); clearTimeout(s.timer); s.run.status = "stopped"; s.run.ended = Date.now(); draw(); });
+  reset.addEventListener("click", () => { clearTimeout(s.timer); eng.halt(); delete healStore[u.id]; renderDetail(); dpbRender(true); });
+
+  // --- přehled, uzly, incidenty, události ---
+  const tiles = mkEl("div", "stats"), topo = mkEl("div", "sim-topo hl-topo"), top = mkEl("div", "sim-top"), cols = mkEl("div", "sim-cols"), cards = [];
+  top.append(mkEl("div", "sim-internet", "INTERNET"), mkEl("span", "sim-arrow", "→"), mkEl("div", "sim-wan", "WAN"));
+  [["CONTROL PLANE", plan.control], ["WORKERS", plan.workers]].forEach(([tag, nodes]) => {
+    if (!nodes.length) return;
+    const col = mkEl("div", "sim-col"); col.style.flex = nodes.length + " 1 " + nodes.length * 138 + "px"; const grp = mkEl("div", "sim-group"), head = mkEl("div", "sim-ghead");
+    head.append(mkEl("b", "", tag === "WORKERS" ? "Workers" : "Control plane"), mkEl("small", "", T("{n} VM", { n: nodes.length }))); grp.appendChild(head);
+    nodes.forEach((n) => {
+      const card = mkEl("div", "sim-vm"), badge = mkEl("span", "sim-badge"), det = mkEl("div", "sim-det"), t1 = mkEl("div", "sim-vtop"); t1.append(mkEl("b", "", n.name), badge);
+      card.append(t1, mkEl("div", "sim-sub", (tag === "WORKERS" ? "worker" : "control-plane") + " · " + n.ip), det); grp.appendChild(card); cards.push({ n, card, badge, det });
+    });
+    col.append(mkEl("div", "sim-tab", tag), grp); cols.appendChild(col);
+  });
+  topo.append(top, cols);
+  const dashBox = mkEl("div", "hl-dash"), incBox = mkEl("div", "hl-incs"), evBox = mkEl("div", "hl-events"), fsel = document.createElement("select");
+  [["important", "Důležité události"], ["all", "Všechny události"]].forEach(([v, t]) => fsel.add(new Option(T(t), v))); fsel.value = healCfg.filter; fsel.addEventListener("change", () => { healCfg.filter = fsel.value; save(); draw(); });
+  const evHead = mkEl("div", "hl-head"); evHead.append(mkEl("h3", "", T("Události clusteru")), fsel);
+  const tm = (d) => d.toLocaleTimeString(locale(), { hour12: false });
+  const tile = (label, value, cls) => { const d = mkEl("div", "stat"); d.append(mkEl("small", "", label), mkEl("b", cls || "", value)); return d; };
+
+  function draw() {
+    const S = eng.S, sc = eng.score(), nOk = all.filter((n) => S.node[n.name].status === "healthy").length, nOpen = eng.open().length, avg = S.repairMs.length ? Math.round(S.repairMs.reduce((a, b) => a + b, 0) / S.repairMs.length / 1000) : 0;
+    tiles.innerHTML = ""; tiles.append(tile(T("Zdraví clusteru"), sc + " %", sc >= 90 ? "hl-ok" : sc >= 60 ? "hl-warn" : "hl-bad"), tile(T("Zdravé uzly"), nOk + " / " + all.length), tile(T("Aktivní incidenty"), String(nOpen), nOpen ? "hl-warn" : "hl-ok"), tile(T("Vyřešeno"), String(S.resolved)), tile(T("Ø doba opravy"), avg + " s"));
+    cards.forEach(({ n, card, badge, det }) => {
+      const st = S.node[n.name].status, mine = S.incidents.filter((i) => i.node === n.name && i.status !== "resolved");
+      card.className = "sim-vm st-" + HEAL_NCLS[st]; badge.textContent = T(HEAL_NODE[st]); card.setAttribute("aria-label", n.name + ": " + T(HEAL_NODE[st]));
+      det.textContent = mine.length ? "⚠ " + mine.map((i) => SelfHeal.TYPES[i.type].reason).join(", ") : "";
+    });
+    const idle = s.run.status === "idle";
+    go.textContent = T(idle ? "Spustit monitoring" : "Monitoring běží"); go.disabled = !idle; stop.disabled = !running(); inj.disabled = stopped();
+    incBox.innerHTML = "";
+    const sorted = S.incidents.filter((i) => i.status !== "resolved").sort((a, b) => SelfHeal.PENALTY[b.sev] - SelfHeal.PENALTY[a.sev] || a.id - b.id).concat(S.incidents.filter((i) => i.status === "resolved").sort((a, b) => b.id - a.id).slice(0, 6));
+    if (!sorted.length) incBox.appendChild(mkEl("p", "note", T("Žádné incidenty. Cluster je zdravý.")));
+    sorted.forEach((i) => {
+      const t = SelfHeal.TYPES[i.type], card = mkEl("div", "hl-inc sev-" + i.sev + " st-" + i.status), head = mkEl("div", "hl-inchead");
+      head.append(mkEl("span", "hl-chip sev-" + i.sev, T(HEAL_SEV[i.sev])), mkEl("b", "", T(t.title, i.vars)), mkEl("span", "hl-chip stt-" + i.status, T(HEAL_ST[i.status])), mkEl("small", "", tm(i.t0)));
+      card.append(head, mkEl("div", "hl-cause", T(t.cause)));
+      if (i.status === "escalated") card.appendChild(mkEl("p", "dp-warn", "⚠ " + T(t.escalate)));
+      if (i.status === "resolved") card.appendChild(mkEl("div", "hl-res", "✔ " + T(t.result) + " (" + T(i.outcome === "manual" ? "ručně" : "automaticky") + ", " + Math.round((i.t1 - i.t0) / 1000) + " s)"));
+      const act = mkEl("div", "hl-act");
+      if ((i.status === "open" || i.status === "escalated") && !i.busy && !stopped()) { const b = mkEl("button", "btn primary", T(i.status === "escalated" ? "Použít navržené řešení" : "Opravit")); b.type = "button"; b.addEventListener("click", () => { begin(); eng.remediate(i.id, "manual"); }); act.appendChild(b); }
+      const dt = mkEl("button", "btn", T(s.exp.has(i.id) ? "Skrýt příkazy" : "Příkazy")); dt.type = "button"; dt.addEventListener("click", () => { if (s.exp.has(i.id)) s.exp.delete(i.id); else s.exp.add(i.id); draw(); }); act.appendChild(dt); card.appendChild(act);
+      if (s.exp.has(i.id)) card.appendChild(mkEl("pre", "dp-out", ["# " + T("diagnostika")].concat(t.diag, ["# " + T("oprava")], t.fix).map((c) => c.replace(/\{(\w+)\}/g, (m, k) => i.vars[k] || m)).join("\n")));
+      incBox.appendChild(card);
+    });
+    evBox.innerHTML = "";
+    const evs = S.events.filter((e) => healCfg.filter === "all" || e.important).slice(-40).reverse();
+    if (!evs.length) evBox.appendChild(mkEl("p", "note", T("Zatím žádné události.")));
+    evs.forEach((e) => { const r = mkEl("div", "hl-ev " + (e.type === "Warning" ? "warn" : "norm")); r.append(mkEl("span", "", tm(e.t)), mkEl("b", "", e.type), mkEl("span", "", e.reason), mkEl("span", "", e.object), mkEl("span", "hl-msg", e.msg)); evBox.appendChild(r); });
+    dashDraw(s, dashBox); dpbRender();
+  }
+  box.append(tiles, ctl, actions, topo, mkEl("h3", "hl-h", T("Dashboardy")), dashBox, mkEl("h3", "hl-h", T("Incidenty")), incBox, evHead, evBox);
+  healUi = { id: u.id, update: draw, dash: () => dashDraw(s, dashBox) }; draw(); healTickStart(s, u.id); el.appendChild(box);
+}
+
+// --- Provozní asistent: dashboardy (Grafana, Kibana) a chat "Provozní požadavky" ---
+const SVGNS = "http://www.w3.org/2000/svg";
+const svgEl = (n, a) => { const e = document.createElementNS(SVGNS, n); Object.entries(a || {}).forEach(([k, v]) => e.setAttribute(k, v)); return e; };
+function spark(vals, max, color) {
+  const W = 300, H = 74, svg = svgEl("svg", { viewBox: "0 0 " + W + " " + H, class: "gf-svg", preserveAspectRatio: "none", "aria-hidden": "true" });
+  [0.25, 0.5, 0.75].forEach((f) => svg.appendChild(svgEl("line", { x1: 0, x2: W, y1: H * f, y2: H * f, class: "gf-grid" })));
+  if (vals.length > 1) {
+    const pts = vals.map((v, i) => [(i + 60 - vals.length) * W / 59, H - Math.min(1, v / max) * (H - 4) - 2]), line = pts.map((p) => p[0].toFixed(1) + "," + p[1].toFixed(1)).join(" ");
+    svg.appendChild(svgEl("polygon", { points: pts[0][0] + "," + H + " " + line + " " + pts[pts.length - 1][0] + "," + H, fill: color, opacity: ".18" }));
+    svg.appendChild(svgEl("polyline", { points: line, fill: "none", stroke: color, "stroke-width": 2, "vector-effect": "non-scaling-stroke" }));
+  }
+  return svg;
+}
+const GF_PANELS = [["CPU clusteru", "%", 100, "cpu", "#73bf69", 80], ["Paměť clusteru", "%", 100, "mem", "#5794f2", 80], ["Restarty podů", "/min", 12, "restarts", "#ff9830", 3], ["Latence API", "ms", 400, "lat", "#b877d9", 200]];
+function dashDraw(s, box) {
+  const S = s.eng.S, last = S.series[S.series.length - 1] || {}, gf = mkEl("div", "gf"), kb = mkEl("div", "kb");
+  const gh = mkEl("div", "dash-head"); gh.append(mkEl("b", "", "Grafana"), mkEl("span", "", "Kubernetes / " + T("Přehled clusteru")), mkEl("small", "", T("obnova {s} s", { s: 5 })));
+  const grid = mkEl("div", "gf-grid-panels");
+  GF_PANELS.forEach(([t, unit, max, key, col, thr]) => {
+    const v = last[key], p = mkEl("div", "gf-panel"), bad = v !== undefined && v > thr;
+    p.append(mkEl("div", "gf-title", T(t)), mkEl("div", "gf-val" + (bad ? " bad" : ""), v === undefined ? "–" : (key === "restarts" || key === "lat" ? Math.round(v) : v.toFixed(0)) + " " + unit), spark(S.series.map((x) => x[key]), max, bad ? "#f2495c" : col)); grid.appendChild(p);
+  });
+  const rp = mkEl("div", "gf-panel gf-stat"), down = last.total !== undefined && last.ready < last.total;
+  rp.append(mkEl("div", "gf-title", T("Uzly Ready")), mkEl("div", "gf-val" + (down ? " bad" : ""), last.total === undefined ? "–" : last.ready + " / " + last.total)); grid.appendChild(rp);
+  gf.append(gh, grid);
+  const kh = mkEl("div", "dash-head"), lv = document.createElement("select");
+  [["all", "Všechny úrovně"], ["warn", "Varování a chyby"], ["error", "Jen chyby"]].forEach(([v, t]) => lv.add(new Option(T(t), v))); lv.value = healCfg.level || "all";
+  lv.addEventListener("change", () => { healCfg.level = lv.value; lsSet("usecase-heal", healCfg); dashDraw(s, box); });
+  kh.append(mkEl("b", "", "Kibana"), mkEl("span", "", "Discover · kubernetes-logs-*"), lv);
+  const W = 300, H = 74, hs = svgEl("svg", { viewBox: "0 0 " + W + " " + H, class: "gf-svg kb-hist", preserveAspectRatio: "none", "aria-hidden": "true" }), mx = Math.max(6, ...S.hist.map((c) => c.INFO + c.WARN + c.ERROR)), bw = W / 30;
+  S.hist.forEach((c, i) => { let y = H; [["INFO", "#5794f2"], ["WARN", "#ff9830"], ["ERROR", "#f2495c"]].forEach(([k, col]) => { const hh = c[k] / mx * (H - 4); if (hh > 0) { y -= hh; hs.appendChild(svgEl("rect", { x: ((i + 30 - S.hist.length) * bw + 1).toFixed(1), y: y.toFixed(1), width: (bw - 2).toFixed(1), height: hh.toFixed(1), fill: col })); } }); });
+  const rows = S.logs.filter((l) => lv.value === "all" || (lv.value === "warn" ? l.level !== "INFO" : l.level === "ERROR")).slice(-12).reverse(), tb = mkEl("div", "kb-rows");
+  if (!rows.length) tb.appendChild(mkEl("p", "note", T("Zatím žádné záznamy.")));
+  rows.forEach((l) => { const r = mkEl("div", "kb-row lv-" + l.level.toLowerCase()); r.append(mkEl("span", "", l.t.toLocaleTimeString(locale(), { hour12: false })), mkEl("b", "", l.level), mkEl("span", "", l.svc), mkEl("span", "kb-msg", l.msg)); tb.appendChild(r); });
+  kb.append(kh, mkEl("div", "gf-title", T("Počet záznamů podle úrovně")), hs, tb);
+  box.innerHTML = ""; box.append(gf, kb);
+}
+function healTickStart(s, uid) {
+  if (s.tt || s.run.status === "stopped") return;
+  s.tt = setTimeout(() => {
+    s.tt = null;
+    if (state.mode !== "heal" || healStore[uid] !== s || s.run.status === "stopped") return;
+    s.eng.tick(); if (healUi && healUi.id === uid) healUi.dash(); healTickStart(s, uid);
+  }, 1500 / Math.min(deployCfg.speed, 4));
+}
+
+// chat "Provozní požadavky": pravidlový výklad dotazů (cs i en), žádná AI
+const nrm = (x) => String(x).toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
+const OPS_APPS = [["web", /\bweb\b|front/], ["api", /\bapi\b/], ["queue-worker", /queue|fronta/], ["grafana", /grafan/], ["hello-world", /hello/]];
+const OPS_TYPES = [["crash", /crash|spad|pada/], ["oom", /\boom|pamet|memory/], ["node", /uzel|node|kubelet/], ["disk", /disk/], ["calico", /calico|sit\b|network/], ["etcd", /etcd/], ["cert", /cert/], ["image", /obraz|image|pull/], ["pending", /pending|kapacit|capacity/]];
+function opsPush(text, who) {
+  const s = healStore[state.id]; if (!s) return; s.chat.push({ who, text }); opsRender();
+}
+function opsRender() {
+  const s = healStore[state.id], box = $("ops-msgs"); box.innerHTML = ""; if (!s) return;
+  s.chat.forEach((m) => box.appendChild(mkEl("div", "ops-msg " + m.who, m.text))); box.scrollTop = box.scrollHeight;
+}
+function opsOpen(on) { $("ops-panel").hidden = !on; $("ops-fab").setAttribute("aria-expanded", String(on)); if (on) { const s = healStore[state.id]; if (s && !s.chat.length) opsPush(T("Dobrý den, jsem provozní asistent. Napište třeba „Oprav aplikaci web“, „Jaký je stav clusteru?“ nebo „Co se stalo?“."), "bot"); opsRender(); } }
+async function opsHandle(raw) {
+  const s = healStore[state.id]; if (!s) return;
+  const t = nrm(raw), eng = s.eng, say = (txt, v) => opsPush(T(txt, v), "bot"), titleOf = (i) => T(eng.TYPES[i.type].title, i.vars);
+  const node = s.nodes.find((n) => t.includes(nrm(n.name))), app = node ? null : (OPS_APPS.find(([, re]) => re.test(t)) || [])[0];
+  const all = /\bvse\b|vsechn|\ball\b|everything|komplet/.test(t), live = () => eng.open().filter((i) => !i.busy);
+  if (/vloz|simuluj|inject|simulate|vytvor incident/.test(t)) {
+    if (s.run.status === "stopped") { say("Monitoring je zastavený. Použijte Vynulovat simulaci a spusťte ho znovu."); return; }
+    s.begin(); const ty = (OPS_TYPES.find(([, re]) => re.test(t)) || ["random"])[0], i = eng.inject(ty);
+    say(i ? "Vložil jsem incident #{id}: {t}." : "Tento incident už běží, nic jsem nevložil.", i ? { id: i.id, t: titleOf(i) } : undefined); return;
+  }
+  if (/oprav|vyres|spravit|zotav|fix|repair|resolve|heal|restart|nastartuj/.test(t)) {
+    if (s.run.status === "stopped") { say("Monitoring je zastavený. Použijte Vynulovat simulaci a spusťte ho znovu."); return; }
+    s.begin();
+    const inc = live(), isApp = !node && !app && /aplikac|applicat|\bapp\b|\bpod|sluzb/.test(t);
+    const sel = node ? inc.filter((i) => i.node === node.name) : app ? inc.filter((i) => i.vars.app === app) : all ? inc : isApp ? inc.filter((i) => eng.TYPES[i.type].kind === "pod") : inc;
+    if (!sel.length) {
+      if (app) { say("Pro {app} není otevřený incident. Provádím preventivní restart deploymentu.", { app }); const ok = await eng.restartApp(app); say(ok ? "Deployment {app} byl restartován a pody běží." : "Restart se nepodařilo dokončit.", { app }); }
+      else if (node) say("Uzel {node} nemá žádný otevřený incident.", { node: node.name });
+      else say(isApp ? "Žádná aplikace nemá otevřený incident." : "Nenašel jsem žádný otevřený incident, který bych mohl opravit. Cluster je zdravý.");
+      return;
+    }
+    say("Rozumím. Opravuji incidenty ({n}): {l}.", { n: sel.length, l: sel.map((i) => "#" + i.id + " " + titleOf(i)).join("; ") });
+    await Promise.all(sel.map(async (i) => { await eng.remediate(i.id, "manual"); say(i.status === "resolved" ? "✔ #{id}: {r}" : "⚠ Incident #{id} se nepodařilo vyřešit (stav: {st}).", { id: i.id, r: T(eng.TYPES[i.type].result), st: T(HEAL_ST[i.status]) }); }));
+    say("Hotovo. Zdraví clusteru: {h} %.", { h: eng.score() }); return;
+  }
+  if (/udalost|co se stalo|events|what happened|log/.test(t)) {
+    const ev = eng.S.events.filter((e) => e.important).slice(-5).reverse(); healCfg.filter = "important"; lsSet("usecase-heal", healCfg);
+    say(ev.length ? "Poslední důležité události:" : "Zatím nejsou žádné důležité události."); ev.forEach((e) => opsPush(e.t.toLocaleTimeString(locale(), { hour12: false }) + " " + e.type + " " + e.reason + " " + e.object, "bot")); return;
+  }
+  if (/incident|problem|issue|jake mame|co nefunguje|nefunguje/.test(t)) {
+    const o = eng.open(); if (!o.length) { say("Žádné incidenty. Cluster je zdravý."); return; }
+    say("Aktivní incidenty ({n}):", { n: o.length }); o.forEach((i) => opsPush("#" + i.id + " [" + T(HEAL_SEV[i.sev]) + "] " + titleOf(i) + " – " + T(HEAL_ST[i.status]), "bot")); return;
+  }
+  if (/stav|zdravi|jak je|jak na tom|status|health|how is/.test(t)) {
+    const S = eng.S, ok = s.nodes.filter((n) => S.node[n.name].status === "healthy").length;
+    say("Zdraví clusteru {h} %, zdravé uzly {a} z {n}, aktivní incidenty: {i}, vyřešeno: {r}.", { h: eng.score(), a: ok, n: s.nodes.length, i: eng.open().length, r: S.resolved }); return;
+  }
+  say("Nerozumím. Zkuste například: „Oprav aplikaci web“, „Oprav všechno“, „Jaký je stav clusteru?“, „Jaké jsou incidenty?“ nebo „Co se stalo?“.");
+}
+
+// --- Dokumentace: historie provedených nasazení (VM i Kubernetes) s jejich konfigurací; ukládá se v prohlížeči ---
+const docsList = (() => { const s = lsGet("usecase-docs"); return (Array.isArray(s) ? s : []).map((d) => (d.status === "running" ? Object.assign(d, { status: "stopped" }) : d)); })();
+const docsSave = () => { if (docsList.length > 15) docsList.length = 15; lsSet("usecase-docs", docsList); };
+const DOC_ST = { running: "probíhá", ok: "hotovo", failed: "chyba", stopped: "přerušeno" };
+const iso = (d) => new Date(d).toISOString();
+function docVmStart(u, vms, sim) {
+  const nameOf = (list, id) => { const x = list && list.find((i) => i.uuid === id); return x ? x.name : ""; }, L = sim.lists || {};
+  const d = { id: Date.now() + "-" + Math.floor(Math.random() * 1e4), kind: "vm", uc: u.id, ucName: u.name, t0: iso(Date.now()), t1: null, status: "running", seq0: sim.seq,
+    cfg: { prefix: deployCfg.prefix || u.id, image: deployCfg.imageName || deployCfg.image, imageId: deployCfg.image, vlan: nameOf(L.vlans, deployCfg.vlan) || deployCfg.vlan || "", key: nameOf(L.keys, deployCfg.key) || deployCfg.key || "", start: !!deployCfg.start, concurrency: deployCfg.concurrency, failure: !!deployCfg.failure },
+    vms: vms.map((v) => ({ name: v.name, role: v.role, smp: v.smp, cpu_mhz: v.cpu_mhz, mem_mib: Math.round(v.mem_bytes / 1048576), disk_gib: v.disk_gib, tier: v.disk_tier, status: "queued", uuid: "", disk: "", error: "" })), calls: [] };
+  docsList.unshift(d); docsSave(); return d;
+}
+function docVmFinish(d, out, sim) {
+  d.status = out.status; d.t1 = iso(Date.now()); const names = new Set(d.vms.map((v) => v.name));
+  d.vms.forEach((v) => { const s = sim.vms[v.name] || {}; v.status = s.status || "planned"; v.uuid = (s.uuids || {}).create || ""; v.disk = (s.uuids || {}).clone || ""; v.error = s.error || ""; });
+  d.calls = sim.log.filter((e) => e.seq > d.seq0 && names.has(e.tag)).slice(-300).map((e) => ({ t: iso(e.t), tag: e.tag, method: e.method, path: e.path, status: e.status, ms: e.ms }));
+  docsSave();
+}
+function docK8sStart(u, plan, k) {
+  const nodes = plan.control.map((n) => [n, "control-plane"]).concat(plan.workers.map((n) => [n, "worker"]));
+  const d = { id: Date.now() + "-" + Math.floor(Math.random() * 1e4), kind: "k8s", uc: u.id, ucName: u.name, t0: iso(Date.now()), t1: null, status: "running", seq0: k.seq,
+    cfg: { version: k8sCfg.version, podCidr: k8sCfg.podCidr, calico: CALICO, grafana: !!k8sCfg.grafana, hello: !!k8sCfg.hello, concurrency: k8sCfg.concurrency, failure: k8sCfg.failure, api: plan.control[0].ip + ":6443" },
+    vms: nodes.map(([n, role]) => ({ name: n.name, role, ip: n.ip, cpu_ghz: n.vm.ghz_actual, mem_gib: n.vm.mem_bytes / 1073741824, disk_gib: n.vm.disk_gib, tier: n.vm.disk_tier, status: "queued", error: "" })), calls: [], result: null };
+  docsList.unshift(d); docsSave(); return d;
+}
+function docK8sFinish(d, out, k) {
+  d.status = out.status; d.t1 = iso(Date.now());
+  d.vms.forEach((v) => { const s = k.nodes[v.name] || {}; v.status = s.status || "planned"; v.error = s.error || ""; });
+  d.calls = k.log.filter((e) => e.seq > d.seq0 && e.method === "$").slice(-120).map((e) => ({ t: iso(e.t), tag: e.tag, method: "$", path: e.path, status: e.status, ms: e.ms }));
+  d.result = { failed: out.failed, nodes: out.nodes.map((n) => ({ name: n.name, role: n.role, version: n.version, ip: n.ip })), addons: out.addons };
+  docsSave();
+}
+const docDt = (x) => (x ? new Date(x).toLocaleString(locale(), { hour12: false }) : "–");
+const docTm = (x) => new Date(x).toLocaleTimeString(locale(), { hour12: false });
+function docMarkdown(list) {
+  const out = ["# " + T("Dokumentace nasazení"), ""];
+  list.forEach((d) => {
+    out.push("## " + (d.kind === "vm" ? "Deploy VM" : "Deploy Kubernetes") + " – " + T(d.ucName) + " (" + docDt(d.t0) + ", " + T(DOC_ST[d.status] || d.status) + ")", "", "```json", JSON.stringify(d.cfg, null, 2), "```", "");
+    if (d.kind === "vm") { out.push("| VM | " + T("Role") + " | vCPU | CPU MHz | RAM MiB | Disk GiB | " + T("Třída") + " | " + T("Stav") + " | UUID |", "|---|---|---|---|---|---|---|---|---|"); d.vms.forEach((v) => out.push("| " + [v.name, v.role, v.smp, v.cpu_mhz, v.mem_mib, v.disk_gib, v.tier, T(SIM_ST[v.status] || v.status), v.uuid].join(" | ") + " |")); }
+    else { out.push("| " + T("Uzel") + " | " + T("Role") + " | IP | CPU GHz | RAM GiB | Disk GiB | " + T("Stav") + " |", "|---|---|---|---|---|---|---|"); d.vms.forEach((v) => out.push("| " + [v.name, v.role, v.ip, v.cpu_ghz, v.mem_gib, v.disk_gib, T(K8S_ST[v.status] || v.status)].join(" | ") + " |")); }
+    out.push("", "```", ...d.calls.map((c) => docTm(c.t) + " " + c.tag + " " + c.method + " " + c.path + " -> " + c.status + " " + c.ms + " ms"), "```", "");
+  });
+  return out.join("\n");
+}
+// --- Provozní příručky (Kubernetes, Aplikace): texty jsou dvojjazyčné [cs, en], obsah se doplňuje podle vybraného use-case ---
+const docsTab = { v: (lsGet("usecase-doctab") || "history") };
+const BI = (p) => (LANG === "en" ? p[1] : p[0]);
+const PH = (s) => String(s).replace(/\{node\}/g, "<node>").replace(/\{ip\}/g, "<ip>").replace(/\{ns\}/g, "<namespace>").replace(/\{pod\}/g, "<pod>").replace(/\{app\}/g, "<app>");
+// sekce: { h: [cs,en], p: [[cs,en]...], steps: [[cs,en]...], cmds: [[popis [cs,en], příkaz]...] }
+const K8S_MAN = [
+  { h: ["Denní kontroly", "Daily checks"], p: [["Provádí se jednou denně a po každé změně. Cílem je odhalit problém dřív než uživatelé.", "Performed once a day and after every change. The goal is to find a problem before users do."]],
+    cmds: [[["Všechny uzly jsou Ready", "All nodes are Ready"], "kubectl get nodes -o wide"], [["Žádný pod není v chybě", "No pod is failing"], "kubectl get pods -A --no-headers | grep -v -E 'Running|Completed'"], [["Síť Calico je dostupná", "Calico networking is available"], "kubectl get tigerastatus"], [["Spotřeba prostředků uzlů", "Node resource usage"], "kubectl top nodes"], [["Důležité události za poslední hodinu", "Important events of the last hour"], "kubectl get events -A --field-selector type=Warning --sort-by=.lastTimestamp | tail -20"]],
+    steps: [["Otevřít dashboard Grafana (Přehled clusteru) a zkontrolovat CPU, paměť, restarty podů a latenci API.", "Open the Grafana dashboard (Cluster overview) and check CPU, memory, pod restarts and API latency."], ["V Kibaně filtrovat úroveň ERROR za posledních 24 hodin.", "In Kibana filter the ERROR level for the last 24 hours."]] },
+  { h: ["Údržba uzlu (výměna, restart, aktualizace OS)", "Node maintenance (replacement, reboot, OS update)"],
+    steps: [["Uzel vyřadit z plánování: cordon.", "Take the node out of scheduling: cordon."], ["Vyprázdnit uzel: drain (respektuje PodDisruptionBudget).", "Evacuate the node: drain (respects PodDisruptionBudget)."], ["Provést údržbu a restart uzlu.", "Perform maintenance and reboot the node."], ["Vrátit uzel do provozu: uncordon a ověřit stav Ready.", "Return the node to service: uncordon and verify Ready."]],
+    cmds: [[["Vyřadit z plánování", "Cordon"], "kubectl cordon <node>"], [["Vyprázdnit", "Drain"], "kubectl drain <node> --ignore-daemonsets --delete-emptydir-data"], [["Vrátit do provozu", "Uncordon"], "kubectl uncordon <node>"]] },
+  { h: ["Přidání worker uzlu", "Adding a worker node"],
+    steps: [["Nasadit novou VM (záložka Deploy VM) a nainstalovat balíčky Kubernetes (containerd, kubeadm, kubelet, kubectl).", "Deploy a new VM (Deploy VM tab) and install the Kubernetes packages (containerd, kubeadm, kubelet, kubectl)."], ["Na control plane vytvořit join příkaz a spustit ho na nové VM.", "Create a join command on the control plane and run it on the new VM."], ["Ověřit, že uzel je Ready a běží na něm calico-node.", "Verify that the node is Ready and calico-node runs on it."]],
+    cmds: [[["Join příkaz (na control plane)", "Join command (on the control plane)"], "kubeadm token create --print-join-command"], [["Ověření", "Verification"], "kubectl get nodes && kubectl -n calico-system get pods -o wide"]] },
+  { h: ["Aktualizace verze Kubernetes (kubeadm)", "Kubernetes version upgrade (kubeadm)"],
+    p: [["Aktualizuje se vždy o jednu minor verzi. Nejdřív záloha etcd, pak control plane po jednom uzlu, nakonec workery.", "Upgrade one minor version at a time. First back up etcd, then the control plane one node at a time, finally the workers."]],
+    steps: [["Zálohovat etcd (viz níže) a zkontrolovat, že cluster je zdravý.", "Back up etcd (see below) and check that the cluster is healthy."], ["Na prvním control plane: aktualizovat kubeadm, zobrazit plán a provést upgrade apply.", "On the first control plane: upgrade kubeadm, show the plan and run upgrade apply."], ["Na dalších control plane: upgrade node. Poté aktualizovat kubelet a kubectl a restartovat kubelet.", "On the other control planes: upgrade node. Then upgrade kubelet and kubectl and restart kubelet."], ["Workery po jednom: drain, upgrade node, aktualizace kubeletu, uncordon.", "Workers one by one: drain, upgrade node, upgrade kubelet, uncordon."]],
+    cmds: [[["Plán aktualizace", "Upgrade plan"], "sudo kubeadm upgrade plan"], [["První control plane", "First control plane"], "sudo kubeadm upgrade apply v1.xx.y"], [["Ostatní uzly", "Other nodes"], "sudo kubeadm upgrade node"], [["Restart kubeletu", "Restart kubelet"], "sudo systemctl daemon-reload && sudo systemctl restart kubelet"]] },
+  { h: ["Certifikáty clusteru", "Cluster certificates"], p: [["Certifikáty vytvořené kubeadm platí rok. Obnovují se před vypršením a po obnově je nutné restartovat pody control plane.", "Certificates created by kubeadm are valid for one year. Renew them before expiry and restart the control plane pods afterwards."]],
+    cmds: [[["Kontrola platnosti", "Check expiry"], "sudo kubeadm certs check-expiration"], [["Obnovení", "Renewal"], "sudo kubeadm certs renew all"], [["Restart statických podů", "Restart static pods"], "sudo crictl pods --name 'kube-apiserver|kube-controller|kube-scheduler|etcd'"]] },
+  { h: ["Záloha a obnova etcd", "etcd backup and restore"], p: [["Záloha se dělá denně a před každou změnou verze. Obnova je krajní řešení při ztrátě kvora.", "Back up daily and before every version change. Restore is a last resort when quorum is lost."]],
+    cmds: [[["Záloha snapshotu", "Snapshot backup"], "sudo ETCDCTL_API=3 etcdctl --endpoints=https://127.0.0.1:2379 --cacert=/etc/kubernetes/pki/etcd/ca.crt --cert=/etc/kubernetes/pki/etcd/server.crt --key=/etc/kubernetes/pki/etcd/server.key snapshot save /backup/etcd-$(date +%F).db"], [["Kontrola snapshotu", "Verify snapshot"], "sudo etcdctl snapshot status /backup/etcd-<date>.db -w table"], [["Zdraví členů", "Member health"], "kubectl -n kube-system exec etcd-<node> -- etcdctl endpoint health --cluster"]] },
+  { h: ["Přístup k nástrojům", "Access to tools"], p: [["Grafana a Hello World jsou jen ClusterIP, zvenčí nejsou dostupné. Přistupuje se přes port-forward.", "Grafana and Hello World are ClusterIP only and not reachable from outside. Access them via port-forward."]],
+    cmds: [["Grafana", "kubectl -n monitoring port-forward --address 127.0.0.1 svc/kube-prometheus-stack-grafana 3000:80"], ["Hello World", "kubectl -n demo port-forward svc/hello-world 8080:80"]] },
+  { h: ["Eskalace", "Escalation"], steps: [["Kritický incident (uzel, etcd): okamžitě informovat službu konajícího správce platformy.", "Critical incident (node, etcd): immediately notify the on-call platform administrator."], ["Závažný incident bez opravy do 30 minut: zapsat do incidentního kanálu a předat vedoucímu týmu.", "Major incident not fixed within 30 minutes: log it in the incident channel and hand over to the team lead."], ["Po vyřešení zapsat příčinu a opatření (post-mortem do 5 pracovních dnů).", "After resolution record the cause and measures (post-mortem within 5 working days)."]] }
+];
+const APP_MAN = [
+  { h: ["Spuštění, zastavení a restart", "Start, stop and restart"],
+    cmds: [[["Restart aplikace v Kubernetes", "Restart an application in Kubernetes"], "kubectl -n <namespace> rollout restart deployment/<app>"], [["Zastavení (0 replik)", "Stop (0 replicas)"], "kubectl -n <namespace> scale deployment/<app> --replicas=0"], [["Opětovné spuštění", "Start again"], "kubectl -n <namespace> scale deployment/<app> --replicas=2"], [["Aplikace na samostatné VM (systemd)", "Application on a standalone VM (systemd)"], "sudo systemctl restart <service> && sudo systemctl status <service>"]] },
+  { h: ["Kontrola zdraví aplikace", "Application health check"],
+    steps: [["Ověřit odpověď health endpointu a dobu odezvy.", "Verify the health endpoint response and response time."], ["Zkontrolovat, že všechny repliky jsou Running a Ready.", "Check that all replicas are Running and Ready."], ["V Grafaně zkontrolovat restarty a latenci, v Kibaně chyby aplikace.", "In Grafana check restarts and latency, in Kibana the application errors."]],
+    cmds: [["Health endpoint", "curl -fsS -o /dev/null -w '%{http_code} %{time_total}s\\n' https://<application>/health"], ["Repliky", "kubectl -n <namespace> get pods -l app=<app> -o wide"], ["Logy", "kubectl -n <namespace> logs deployment/<app> --tail=100"]] },
+  { h: ["Nasazení nové verze a návrat zpět", "Releasing a new version and rollback"],
+    steps: [["Před nasazením ověřit, že je nový obraz v registru a že proběhly testy.", "Before releasing verify that the new image exists in the registry and the tests passed."], ["Nasadit novou verzi a sledovat rollout.", "Release the new version and watch the rollout."], ["Při chybě okamžitě vrátit předchozí vydání (rollback) a zapsat incident.", "On error roll back to the previous release immediately and log an incident."]],
+    cmds: [[["Nová verze", "New version"], "kubectl -n <namespace> set image deployment/<app> <app>=registry.local/<app>:<tag>"], [["Sledování", "Watch"], "kubectl -n <namespace> rollout status deployment/<app> --timeout=120s"], [["Rollback", "Rollback"], "kubectl -n <namespace> rollout undo deployment/<app>"], [["Historie", "History"], "kubectl -n <namespace> rollout history deployment/<app>"]] },
+  { h: ["Škálování", "Scaling"], p: [["Při trvale vysoké zátěži nejdřív zvýšit počet replik, teprve poté přidávat výkon VM nebo worker uzly.", "Under sustained high load first raise the number of replicas, only then add VM capacity or worker nodes."]],
+    cmds: [[["Ruční škálování", "Manual scaling"], "kubectl -n <namespace> scale deployment/<app> --replicas=<n>"], [["Automatické škálování", "Autoscaling"], "kubectl -n <namespace> autoscale deployment/<app> --min=2 --max=8 --cpu-percent=70"], [["Kapacita uzlů", "Node capacity"], "kubectl describe nodes | grep -A5 'Allocated resources'"]] },
+  { h: ["Databáze: záloha a obnova", "Databases: backup and restore"], p: [["Zálohy se kontrolují obnovou do testovacího prostředí alespoň jednou měsíčně. Záloha bez ověřené obnovy se nepočítá.", "Backups are verified by restoring to a test environment at least monthly. A backup without a verified restore does not count."]],
+    cmds: [["PostgreSQL – záloha", "pg_dump -Fc -h <db-host> -U <user> <database> > /backup/<database>-$(date +%F).dump"], ["PostgreSQL – obnova", "pg_restore -h <db-host> -U <user> -d <database> --clean /backup/<database>-<date>.dump"], ["Redis – záloha", "redis-cli -h <redis-host> BGSAVE && redis-cli -h <redis-host> LASTSAVE"], ["PostgreSQL – replikace", "psql -h <db-host> -U <user> -c 'SELECT client_addr, state, replay_lag FROM pg_stat_replication;'"]] },
+  { h: ["Logy a monitoring", "Logs and monitoring"],
+    steps: [["Grafana: panely CPU, paměť, restarty podů a latence API (práh: CPU/paměť 80 %, restarty 3/min, latence 200 ms).", "Grafana: CPU, memory, pod restarts and API latency panels (thresholds: CPU/memory 80 %, restarts 3/min, latency 200 ms)."], ["Kibana: Discover, index kubernetes-logs-*, filtr podle služby a úrovně (WARN, ERROR).", "Kibana: Discover, index kubernetes-logs-*, filter by service and level (WARN, ERROR)."], ["Provozní asistent: chat Provozní požadavky umí aplikaci opravit, vypsat incidenty a důležité události.", "Operations assistant: the Operations requests chat can repair an application and list incidents and important events."]] },
+  { h: ["Řešení běžných problémů", "Troubleshooting common problems"], table: [
+      [["Chyba 502/503 u aplikace", "502/503 error from the application"], ["Žádná replika není Ready nebo služba nemá endpointy.", "No replica is Ready or the service has no endpoints."], "kubectl -n <namespace> get endpoints <app> && kubectl -n <namespace> describe pod <pod>"],
+      [["Pod se stále restartuje (CrashLoopBackOff)", "Pod keeps restarting (CrashLoopBackOff)"], ["Chyba konfigurace nebo chybějící závislost.", "Configuration error or missing dependency."], "kubectl -n <namespace> logs <pod> --previous --tail=50"],
+      [["Pod končí OOMKilled", "Pod ends with OOMKilled"], ["Paměťový limit je příliš nízký nebo aplikace uniká paměť.", "The memory limit is too low or the application leaks memory."], "kubectl -n <namespace> set resources deployment/<app> --limits=memory=1Gi"],
+      [["Pomalé odezvy", "Slow responses"], ["Vytížená databáze, nedostatek replik nebo pomalá síť.", "Overloaded database, too few replicas or a slow network."], "kubectl top pods -n <namespace> && kubectl -n <namespace> scale deployment/<app> --replicas=<n>"],
+      [["Pod nejde naplánovat (Pending)", "Pod cannot be scheduled (Pending)"], ["Na uzlech není dost CPU nebo paměti.", "Nodes do not have enough CPU or memory."], "kubectl -n <namespace> describe pod <pod>"],
+      [["Plný disk na VM", "Full disk on a VM"], ["Staré logy, obrazy nebo dumpy databáze.", "Old logs, images or database dumps."], "df -h && sudo journalctl --vacuum-size=200M && sudo crictl rmi --prune"]] },
+  { h: ["Plánované údržby", "Planned maintenance"], steps: [["Oznámit okno údržby uživatelům nejméně 3 pracovní dny předem.", "Announce the maintenance window to users at least 3 working days in advance."], ["Před údržbou zálohovat databáze a ověřit rollback plán.", "Before maintenance back up the databases and verify the rollback plan."], ["Po údržbě provést kontrolu zdraví a potvrdit návrat do provozu.", "After maintenance run the health check and confirm return to service."]] },
+  { h: ["Eskalace", "Escalation"], steps: [["Aplikace nedostupná pro všechny uživatele: okamžitě informovat vedoucího týmu a službu konajícího správce.", "Application unavailable for all users: immediately notify the team lead and the on-call administrator."], ["Částečná degradace: řešit v týmu do 1 hodiny, jinak eskalovat.", "Partial degradation: handle within the team within 1 hour, otherwise escalate."], ["Po incidentu zapsat příčinu, dopad a nápravná opatření.", "After an incident record the cause, impact and corrective actions."]] }
+];
+function manualBuild(kind, u, list) {
+  const secs = [];
+  if (kind === "k8s") {
+    const plan = k8sPlan(u, list), nodes = plan.control.map((n) => [n.name, "control-plane", n.ip]).concat(plan.workers.map((n) => [n.name, "worker", n.ip]));
+    secs.push({ h: ["Přehled clusteru", "Cluster overview"], p: [[`Use-case: ${T(u.name)} · Kubernetes ${k8sCfg.version} · Pod CIDR ${k8sCfg.podCidr} · Calico ${CALICO} · API ${plan.control.length ? plan.control[0].ip + ":6443" : "–"}`, `Use-case: ${T(u.name)} · Kubernetes ${k8sCfg.version} · Pod CIDR ${k8sCfg.podCidr} · Calico ${CALICO} · API ${plan.control.length ? plan.control[0].ip + ":6443" : "–"}`]],
+      rows: { head: [T("Uzel"), T("Role"), "IP"], data: nodes } });
+    secs.push(K8S_MAN[0]);
+    secs.push({ h: ["Řešení incidentů", "Incident runbooks"], p: [["Postupy odpovídají incidentům, které detekuje Provozní asistent. Spouští se podle závažnosti; kritické incidenty mají přednost.", "The procedures match the incidents detected by the Operations assistant. They run by severity; critical incidents come first."]],
+      inc: Object.keys(SelfHeal.TYPES).map((k) => ({ id: k, t: SelfHeal.TYPES[k] })) });
+    K8S_MAN.slice(1).forEach((s) => secs.push(s));
+  } else {
+    const rows = list.filter((r) => ["Aplikační", "Databázové"].includes(catOf(r.role)));
+    secs.push({ h: ["Přehled aplikace", "Application overview"], p: [[`Use-case: ${T(u.name)} – ${T(u.about)}`, `Use-case: ${T(u.name)} – ${T(u.about)}`]],
+      rows: { head: ["VM", T("Role"), T("Počet"), "CPU (GHz)", "RAM (GiB)", "Disk (GB)", T("Funkce")], data: rows.map((r) => [r.name, trRole(r.role), r.count, fmt(r.ghz), fmt(r.ram), fmt(r.disk), r.fn ? T(r.fn) : ""]) } });
+    APP_MAN.forEach((s) => secs.push(s));
+  }
+  return secs;
+}
+function manualMarkdown(secs, title) {
+  const o = ["# " + title, ""];
+  secs.forEach((s) => {
+    o.push("## " + BI(s.h), ""); (s.p || []).forEach((p) => o.push(BI(p), ""));
+    if (s.rows) { o.push("| " + s.rows.head.join(" | ") + " |", "|" + s.rows.head.map(() => "---").join("|") + "|"); s.rows.data.forEach((r) => o.push("| " + r.join(" | ") + " |")); o.push(""); }
+    (s.steps || []).forEach((p, i) => o.push((i + 1) + ". " + BI(p))); if (s.steps) o.push("");
+    if (s.cmds) { s.cmds.forEach((c) => o.push("- " + BI(c[0]) + ":", "  ```", "  " + c[1], "  ```")); o.push(""); }
+    if (s.table) { o.push("| " + [T("Příznak"), T("Pravděpodobná příčina"), T("Kontrola / řešení")].join(" | ") + " |", "|---|---|---|"); s.table.forEach((r) => o.push("| " + BI(r[0]) + " | " + BI(r[1]) + " | `" + r[2] + "` |")); o.push(""); }
+    if (s.inc) s.inc.forEach((i) => { const v = { node: "<node>", app: "<app>", ns: "<namespace>", pod: "<pod>", ip: "<ip>" }; o.push("### " + T(i.t.title, v), "", T(i.t.cause), "", "```", ...i.t.diag.concat(i.t.fix).map(PH), "```", ""); });
+  });
+  return o.join("\n");
+}
+function manualRender(kind, u, list, box) {
+  const secs = manualBuild(kind, u, list), title = BI(kind === "k8s" ? ["Provozní příručka – Kubernetes", "Operations manual – Kubernetes"] : ["Provozní příručka – Aplikace", "Operations manual – Applications"]) + " (" + T(u.name) + ")";
+  const bar = mkEl("div", "actions"), exp = mkEl("button", "btn", T("Stáhnout příručku (Markdown)")); exp.type = "button"; bar.appendChild(exp);
+  exp.addEventListener("click", () => { const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([manualMarkdown(secs, title)], { type: "text/markdown" })); a.download = "provozni-prirucka-" + kind + "-" + u.id + ".md"; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 1000); });
+  box.append(mkEl("h3", "man-title", title), bar);
+  const cmdBlock = (cmds) => { const wrap = mkEl("div", "man-cmds"); cmds.forEach((c) => { wrap.appendChild(mkEl("div", "man-cd", BI(c[0]))); wrap.appendChild(mkEl("pre", "dp-out", c[1])); }); return wrap; };
+  secs.forEach((s, idx) => {
+    const det = mkEl("details", "doc"), sm = mkEl("summary", "", BI(s.h)); det.open = idx < 2; det.appendChild(sm);
+    (s.p || []).forEach((p) => det.appendChild(mkEl("p", "note", BI(p))));
+    if (s.rows) { const t = mkEl("table", "doc-tbl"), th = document.createElement("tr"); s.rows.head.forEach((h) => th.appendChild(mkEl("th", "", h))); const hd = document.createElement("thead"); hd.appendChild(th); t.appendChild(hd); const tb = document.createElement("tbody"); s.rows.data.forEach((r) => { const x = document.createElement("tr"); r.forEach((c) => x.appendChild(mkEl("td", "", String(c)))); tb.appendChild(x); }); t.appendChild(tb); const w = mkEl("div", "doc-tw"); w.appendChild(t); det.appendChild(w); }
+    if (s.steps) { const ol = document.createElement("ol"); ol.className = "man-steps"; s.steps.forEach((p) => ol.appendChild(mkEl("li", "", BI(p)))); det.appendChild(ol); }
+    if (s.cmds) det.appendChild(cmdBlock(s.cmds));
+    if (s.table) { const t = mkEl("table", "doc-tbl man-tbl"), th = document.createElement("tr"); [T("Příznak"), T("Pravděpodobná příčina"), T("Kontrola / řešení")].forEach((h) => th.appendChild(mkEl("th", "", h))); const hd = document.createElement("thead"); hd.appendChild(th); t.appendChild(hd); const tb = document.createElement("tbody"); s.table.forEach((r) => { const x = document.createElement("tr"); x.append(mkEl("td", "", BI(r[0])), mkEl("td", "", BI(r[1])), mkEl("td", "man-code", r[2])); tb.appendChild(x); }); t.appendChild(tb); const w = mkEl("div", "doc-tw"); w.appendChild(t); det.appendChild(w); }
+    if (s.inc) s.inc.forEach((i) => { const v = { node: "‹node›", app: "‹app›", ns: "<namespace>", pod: "<pod>", ip: "<ip>" }, sub = mkEl("details", "doc-sub"); sub.append(mkEl("summary", "", "[" + T(HEAL_SEV[i.t.sev]) + "] " + T(i.t.title, v)), mkEl("p", "note", T(i.t.cause) + (i.t.auto ? "" : " · " + T(i.t.escalate))), mkEl("pre", "dp-out", ["# " + T("diagnostika")].concat(i.t.diag.map(PH), ["# " + T("oprava")], i.t.fix.map(PH)).join("\n"))); det.appendChild(sub); });
+    box.appendChild(det);
+  });
+}
+
+function renderDocs(u, list0, el) {
+  const box = mkEl("div", "deploy docs"), tabs = mkEl("div", "doc-tabs");
+  [["history", "Historie nasazení"], ["k8s", "Příručka Kubernetes"], ["apps", "Příručka aplikací"]].forEach(([id, label]) => { const b = mkEl("button", "doc-tab" + (docsTab.v === id ? " on" : ""), T(label)); b.type = "button"; b.addEventListener("click", () => { docsTab.v = id; lsSet("usecase-doctab", id); renderDetail(); }); tabs.appendChild(b); });
+  box.appendChild(tabs);
+  if (docsTab.v !== "history") { manualRender(docsTab.v, u, list0, box); el.appendChild(box); return; }
+  box.appendChild(mkEl("p", "note", T("Historie provedených nasazení (Deploy VM a Deploy Kubernetes) s jejich konfigurací, uzly, voláními API a příkazy. Jde o simulace; záznamy se ukládají jen v tomto prohlížeči (posledních 15).")));
+  const bar = mkEl("div", "actions"), kind = document.createElement("select"), one = mkEl("label", "dp-check"), oc = document.createElement("input"); oc.type = "checkbox"; one.append(oc, document.createTextNode(" " + T("Jen vybraný use-case")));
+  [["all", "Všechna nasazení"], ["vm", "Jen Deploy VM"], ["k8s", "Jen Deploy Kubernetes"]].forEach(([v, t]) => kind.add(new Option(T(t), v)));
+  const dl = (name, text, type) => { const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([text], { type })); a.download = name; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 1000); };
+  const bj = mkEl("button", "btn", "Export JSON"), bm = mkEl("button", "btn", "Export Markdown"), bc = mkEl("button", "btn danger", T("Smazat historii")); [bj, bm, bc].forEach((b) => { b.type = "button"; });
+  const list = mkEl("div", "doc-list");
+  const shown = () => docsList.filter((d) => (kind.value === "all" || d.kind === kind.value) && (!oc.checked || d.uc === u.id));
+  bj.addEventListener("click", () => dl("dokumentace-nasazeni.json", JSON.stringify(shown(), null, 2), "application/json"));
+  bm.addEventListener("click", () => dl("dokumentace-nasazeni.md", docMarkdown(shown()), "text/markdown"));
+  bc.addEventListener("click", () => { if (!confirm(T("Smazat celou historii nasazení?"))) return; docsList.length = 0; docsSave(); draw(); });
+  bar.append(kind, one, bj, bm, bc); box.append(bar, list);
+  const kv = (pairs) => { const g = mkEl("dl", "doc-kv"); pairs.forEach(([k, v]) => { g.append(mkEl("dt", "", k), mkEl("dd", "", v === "" || v === undefined ? "–" : String(v))); }); return g; };
+  const tbl = (head, rows) => { const t = mkEl("table", "doc-tbl"), tr = document.createElement("tr"); head.forEach((h) => tr.appendChild(mkEl("th", "", h))); const th = document.createElement("thead"); th.appendChild(tr); t.appendChild(th); const tb = document.createElement("tbody"); rows.forEach((r) => { const x = document.createElement("tr"); r.forEach((c) => x.appendChild(mkEl("td", "", String(c)))); tb.appendChild(x); }); t.appendChild(tb); const w = mkEl("div", "doc-tw"); w.appendChild(t); return w; };
+  const logBlock = (title, d) => { const dt = mkEl("details", "doc-sub"); dt.append(mkEl("summary", "", title + " (" + d.calls.length + ")"), mkEl("pre", "dp-out", d.calls.map((c) => docTm(c.t) + "  " + c.tag + "  " + c.method + " " + c.path + "  → " + c.status + "  " + c.ms + " ms").join("\n") || "–")); return dt; };
+  function draw() {
+    list.innerHTML = ""; const items = shown();
+    if (!items.length) { list.appendChild(mkEl("p", "note", T("Zatím žádná provedená nasazení. Spusťte Deploy VM nebo Deploy Kubernetes."))); return; }
+    items.forEach((d, idx) => {
+      const det = mkEl("details", "doc"), sm = document.createElement("summary"), okc = d.vms.filter((v) => v.status === "deployed" || v.status === "ready").length;
+      det.open = idx === 0; sm.append(mkEl("b", "", d.kind === "vm" ? "Deploy VM" : "Deploy Kubernetes"), mkEl("span", "", T(d.ucName)), mkEl("span", "hl-chip stt-" + (d.status === "ok" ? "resolved" : d.status === "failed" ? "escalated" : "diagnosing"), T(DOC_ST[d.status] || d.status)),
+        mkEl("small", "", T("{a} z {b} připraveno", { a: okc, b: d.vms.length }) + " · " + docDt(d.t0)));
+      det.appendChild(sm);
+      const dur = d.t1 ? Math.round((new Date(d.t1) - new Date(d.t0)) / 1000) + " s" : "–";
+      if (d.kind === "vm") {
+        det.append(kv([[T("Use-case"), T(d.ucName)], [T("Začátek"), docDt(d.t0)], [T("Konec"), docDt(d.t1)], [T("Trvání"), dur], [T("Předpona názvu VM"), d.cfg.prefix], [T("Image z knihovny"), d.cfg.image], ["VLAN", d.cfg.vlan], [T("SSH klíč (volitelně)"), d.cfg.key], [T("Spustit VM po vytvoření"), T(d.cfg.start ? "ano" : "ne")], [T("Souběžně nasazovaných VM"), d.cfg.concurrency], [T("Simulovat chybu API u jedné VM (klon disku)"), T(d.cfg.failure ? "ano" : "ne")]]),
+          tbl(["VM", T("Role"), "vCPU", "CPU MHz", "RAM MiB", "Disk GiB", T("Třída"), T("Stav"), "UUID VM"], d.vms.map((v) => [v.name, trRole(v.role), v.smp, v.cpu_mhz, v.mem_mib, v.disk_gib, v.tier, T(SIM_ST[v.status] || v.status) + (v.error ? " – " + v.error : ""), v.uuid])), logBlock(T("Volání API"), d));
+      } else {
+        det.append(kv([[T("Use-case"), T(d.ucName)], [T("Začátek"), docDt(d.t0)], [T("Konec"), docDt(d.t1)], [T("Trvání"), dur], [T("Verze Kubernetes"), d.cfg.version], [T("Pod CIDR"), d.cfg.podCidr], ["Calico", d.cfg.calico], ["API server", d.cfg.api], [T("Souběžně instalovaných uzlů"), d.cfg.concurrency], ["Grafana", T(d.cfg.grafana ? "ano" : "ne")], ["Hello World", T(d.cfg.hello ? "ano" : "ne")], [T("Simulovat chybu"), d.cfg.failure || T("ne")]]),
+          tbl([T("Uzel"), T("Role"), "IP", "CPU GHz", "RAM GiB", "Disk GiB", T("Stav")], d.vms.map((v) => [v.name, v.role, v.ip, fmt(v.cpu_ghz), fmt(v.mem_gib), v.disk_gib, T(K8S_ST[v.status] || v.status) + (v.error ? " – " + v.error : "")])));
+        if (d.result && d.result.failed) det.appendChild(mkEl("p", "dp-err", "⚠ " + d.result.failed.name + ": " + d.result.failed.message));
+        if (d.result && d.result.addons && d.result.addons.length) det.appendChild(mkEl("pre", "dp-out", d.result.addons.map((a) => a.id + ": " + a.note).join("\n")));
+        det.appendChild(logBlock(T("Příkazy"), d));
+      }
+      list.appendChild(det);
+    });
+  }
+  kind.addEventListener("change", draw); oc.addEventListener("change", draw); draw(); el.appendChild(box);
+}
+
+function renderAll() {
+  $("m-biz").classList.toggle("on", state.mode === "biz");
+  $("m-arch").classList.toggle("on", state.mode === "arch");
+  $("m-deploy").classList.toggle("on", state.mode === "deploy");
+  $("m-k8s").classList.toggle("on", state.mode === "k8s");
+  $("m-heal").classList.toggle("on", state.mode === "heal");
+  $("m-docs").classList.toggle("on", state.mode === "docs");
+  const dep = isSimMode();
+  document.querySelector("aside.req").hidden = dep || state.mode === "docs";
+  if (dep || state.mode === "docs") reqOpen(false);
+  $("ops").hidden = state.mode !== "heal"; if (state.mode !== "heal") opsOpen(false);
+  renderTiles(); renderCompare(); renderDetail(); renderReq();
+  dpbShow(dep);
+}
+
+$("m-biz").addEventListener("click", () => { state.mode = "biz"; lsSet("usecase-state", state); renderAll(); });
+$("m-arch").addEventListener("click", () => { state.mode = "arch"; lsSet("usecase-state", state); renderAll(); });
+$("m-deploy").addEventListener("click", () => { state.mode = "deploy"; lsSet("usecase-state", state); renderAll(); });
+$("m-k8s").addEventListener("click", () => { state.mode = "k8s"; lsSet("usecase-state", state); renderAll(); });
+$("ops-fab").addEventListener("click", () => opsOpen($("ops-panel").hidden));
+$("ops-close").addEventListener("click", () => opsOpen(false));
+$("ops-form").addEventListener("submit", (e) => { e.preventDefault(); const v = $("ops-in").value.trim(); if (!v) return; $("ops-in").value = ""; opsPush(v, "me"); opsHandle(v).catch(() => {}); });
+["Oprav aplikaci", "Oprav všechno", "Jaký je stav clusteru?", "Co se stalo?"].forEach((x) => { const b = mkEl("button", "", T(x)); b.type = "button"; b.dataset.q = x; b.addEventListener("click", () => { opsPush(T(x), "me"); opsHandle(T(x)).catch(() => {}); }); $("ops-ex").appendChild(b); });
+$("m-docs").addEventListener("click", () => { state.mode = "docs"; lsSet("usecase-state", state); renderAll(); });
+$("m-heal").addEventListener("click", () => { state.mode = "heal"; lsSet("usecase-state", state); renderAll(); });
+
+$("lang").addEventListener("click", () => setLang(LANG === "cs" ? "en" : "cs"));
+
+// --- Business požadavky: pravidlový přepočet sizingu (viz sizing.js) ---
+const reqKey = (id) => "usecase-req-" + id;
+const REQ_EXAMPLES = [
+  "Intranet pro 500 zaměstnanců, běžná dostupnost, 200 GB dat",
+  "20 000 uživatelů, dostupnost 99,9 %, 2 TB dat, růst 30 % ročně, sezónní špičky 3×",
+  "Pilotní provoz pro 100 uživatelů, bez vysoké dostupnosti"
+];
+function reqOpen(open) {
+  $("req-panel").hidden = !open;
+  $("req-fab").setAttribute("aria-expanded", String(open));
+  if (open) $("req-text").focus();
+}
+function foundList(found) {
+  const ul = document.createElement("ul"); found.forEach(x => { const li = document.createElement("li"); li.textContent = x; ul.appendChild(li); }); return ul;
+}
+function renderReqOut(s, msg) {
+  const out = $("req-out"); out.innerHTML = "";
+  if (msg) { const p = document.createElement("p"); p.className = "req-msg"; p.textContent = msg; out.appendChild(p); }
+  if (!s) return;
+  const h = document.createElement("b"); h.textContent = T("Rozpoznáno v zadání"); out.appendChild(h);
+  out.appendChild(foundList(SZ.parse(s.text).found));          // popisky se skládají v aktuálním jazyce
+  const r = document.createElement("p"); r.className = "note";
+  r.textContent = T("Zátěž ≈ {u} uživatelů (×{f} oproti výchozímu sizingu). VM: {vb} → {va}, CPU: {gb} → {ga} GHz, RAM: {rb} → {ra} GiB, disk: {db} → {da}.",
+    { u: fmt(s.users), f: fmt(s.f), vb: s.before.vm, va: s.after.vm, gb: fmt(s.before.ghz), ga: fmt(s.after.ghz), rb: fmt(s.before.ram), ra: fmt(s.after.ram), db: fmtGb(s.before.disk), da: fmtGb(s.after.disk) });
+  out.appendChild(r);
+}
+function renderReqDefault(u) {
+  const out = $("req-out"); out.innerHTML = "";
+  if (!u.brief) return;
+  const m = document.createElement("p"); m.className = "req-msg"; m.textContent = T("Výchozí sizing odpovídá tomuto zadání. Upravte text a přepočítejte."); out.appendChild(m);
+  const h = document.createElement("b"); h.textContent = T("Rozpoznáno v zadání"); out.appendChild(h);
+  out.appendChild(foundList(SZ.parse(u.brief).found));
+}
+function renderReq() {
+  if (typeof SZ === "undefined") { $("req-fab").disabled = true; $("req-fab").title = T("Výpočet se nepodařilo načíst"); return; }
+  const u = UC.find(x => x.id === state.id), s = lsGet(reqKey(u.id));
+  $("req-uc").textContent = T(u.name);
+  $("req-text").value = s && s.text ? s.text : T(u.brief || "");   // bez vlastního zadání se předvyplní předpokládané
+  if (s) renderReqOut(s); else renderReqDefault(u);
+}
+function applyReq() {
+  const u = UC.find(x => x.id === state.id), text = $("req-text").value.trim();
+  if (!text) { renderReqOut(lsGet(reqKey(u.id)), T("Napište požadavky, např. počet uživatelů, dostupnost nebo objem dat.")); return; }
+  // totéž co předpokládané zadání (česky nebo anglicky) = výchozí hodnoty
+  if (text === (u.brief || "").trim() || text === T(u.brief || "").trim()) { clearReq(); return; }
+  const p = SZ.parse(text);
+  if (!p.found.length) { renderReqOut(null, T("V zadání jsem nenašel nic, z čeho jde sizing spočítat. Uveďte např. počet uživatelů, požadavky za sekundu, objem dat, dostupnost, růst nebo špičky.")); return; }
+  const res = SZ.adjust(factory(u), p, SZ.parse(u.brief || ""));
+  rows[u.id] = res.rows; lsSet("usecase-v1-" + u.id, res.rows);
+  lsSet(reqKey(u.id), { text, f: res.f, users: res.users, before: res.before, after: res.after });
+  renderAll();
+}
+function clearReq() {
+  const u = UC.find(x => x.id === state.id);
+  try { localStorage.removeItem(reqKey(u.id)); localStorage.removeItem("usecase-v1-" + u.id); } catch (e) {}
+  delete rows[u.id]; renderAll();
+}
+function renderExamples() {
+  const box = $("req-ex"); box.innerHTML = "";
+  REQ_EXAMPLES.forEach(cs => { const t = T(cs), b = document.createElement("button"); b.type = "button"; b.textContent = t; b.addEventListener("click", () => { $("req-text").value = t; $("req-text").focus(); }); box.appendChild(b); });
+}
+$("req-fab").addEventListener("click", () => reqOpen($("req-panel").hidden));
+$("req-close").addEventListener("click", () => reqOpen(false));
+$("req-go").addEventListener("click", applyReq);
+$("req-clear").addEventListener("click", clearReq);
+$("req-text").addEventListener("keydown", (e) => { if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) { e.preventDefault(); applyReq(); } });
+document.addEventListener("keydown", (e) => { if (e.key === "Escape" && !$("req-panel").hidden) reqOpen(false); });
+
+const saved = lsGet("usecase-state");
+if (saved && UC.some(u => u.id === saved.id) && (saved.mode === "biz" || saved.mode === "arch" || saved.mode === "deploy" || saved.mode === "k8s" || saved.mode === "heal" || saved.mode === "docs")) state = saved;
+if (typeof SZ !== "undefined") SZ.setLang(LANG);
+applyStatic(); renderExamples(); renderAll();
+</script>
+</body>
+</html>

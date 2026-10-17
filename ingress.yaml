@@ -1,0 +1,22 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: topologie-web
+  namespace: hackaithon
+  labels:
+    app: topologie-web
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /$2
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: dev-kube.prg1paas.t-cloud.eu
+      http:
+        paths:
+          - path: /hackaithon(/|$)(.*)
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: topologie-web
+                port:
+                  number: 80
