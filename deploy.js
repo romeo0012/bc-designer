@@ -38,6 +38,8 @@ const DP = (() => {
     const errors = [], warnings = [];
     if (!UUID_RE.test(cfg.image || "")) errors.push({ code: "image" });
     if ((cfg.vlan || "").trim() && !UUID_RE.test(cfg.vlan.trim())) errors.push({ code: "vlan" });
+    // VLAN po skupinách topologie: { název skupiny: UUID }; prázdná hodnota = skupina bez síťové karty
+    Object.entries(cfg.vlans || {}).forEach(([group, id]) => { if ((id || "").trim() && !UUID_RE.test(id.trim())) errors.push({ code: "vlan", group }); });
     if ((cfg.key || "").trim() && !UUID_RE.test(cfg.key.trim())) errors.push({ code: "key", value: cfg.key });
     if (!vms.length) errors.push({ code: "none" });
     if (vms.length > MAX_VMS) errors.push({ code: "max", n: vms.length, max: MAX_VMS });

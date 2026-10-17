@@ -16,7 +16,7 @@ Aplikace je **statická** (HTML + JavaScript, bez backendu a bez buildu), češt
    - PaaS vychází z cloudletů, posuvníků utilizace a rezervace a z objemových pásem.
    - Měny: Kč, EUR, USD.
    - Ceník a vzorce jsou převzaté z referenční aplikace, stav k 16. 10. 2026.
-5. **Deploy VM (simulace).** Simuluje vytvoření VM v Business Cloud IaaS přímými voláními API (create → clone → wait → resize → attach → start). Karty VM se barví podle stavu (plánováno, ve frontě, nasazuje se, hotovo), dole běží protokol volání. Rychlost simulace jde měnit, lze simulovat chybu a stav přežije obnovení stránky.
+5. **Deploy VM (simulace).** Simuluje vytvoření VM v Business Cloud IaaS přímými voláními API (create → clone → wait → resize → attach → start). Každá skupina (větev) topologie má vlastní VLAN. Volí se v záhlaví skupiny, předvyplní se podle názvu skupiny a všechny VM skupiny se připojí do ní (skupina bez VLAN se vytvoří bez síťové karty). Karty VM se barví podle stavu (plánováno, ve frontě, nasazuje se, hotovo), dole běží protokol volání. Rychlost simulace jde měnit, lze simulovat chybu a stav přežije obnovení stránky.
 6. **Deploy Kubernetes (simulace).** Nad stejnou topologií simuluje instalaci clusteru: příprava uzlů, containerd, kubeadm init, síť Calico, připojení workerů, ověření a add-ony (Grafana, Hello World). Běh lze zastavit nebo simulovat chybu.
 7. **Provozní asistent.** Hlídá zdraví simulovaného clusteru: dashboardy Grafana a Kibana, detekce incidentů (nedostupný uzel, nezdravé etcd, pád aplikace, ImagePullBackOff a další) a jejich oprava. V chatu stačí napsat např. „Oprav aplikaci“.
 8. **Dokumentace.** Historie všech nasazení včetně konfigurace a volání API, plus provozní příručky pro Kubernetes a aplikace (postupy, příkazy, řešení incidentů) ke stažení jako Markdown.
@@ -66,7 +66,16 @@ kubectl apply -f ingress.yaml
 kubectl -n hackaithon rollout status deployment/bc-designer
 ```
 
-Po změně souborů je potřeba `k8s.yaml` přegenerovat (obsah je do ConfigMapy vložený) a znovu aplikovat. Soubor je velký (stovky kB), protože obsahuje celou aplikaci.
+Po změně souborů aplikace je potřeba ConfigMapu přegenerovat (obsah souborů je v `k8s.yaml` vložený) a znovu aplikovat. Soubor je velký (stovky kB), protože obsahuje celou aplikaci. Při přegenerování zůstávají Deployment a Service beze změny, mění se jen sekce ConfigMap:
+
+```bash
+kubectl create configmap bc-designer -n hackaithon --dry-run=client -o yaml \
+  --from-file=brand.jpg --from-file=cloudsim.js --from-file=deploy.js --from-file=deployer.js \
+  --from-file=i18n.js --from-file=index.html --from-file=k8sinstall.js --from-file=pricing.js \
+  --from-file=selfheal.js --from-file=sizing.js --from-file=use-case.html --from-file=usecases.js
+```
+
+Po `kubectl apply` se obsah ConfigMapy v podech aktualizuje sám (adresář je připojený bez `subPath`, obvykle do minuty). Restart není nutný. Prohlížeč může mít staré soubory v cache, pomůže tvrdé obnovení stránky.
 
 ## Stav a plány
 

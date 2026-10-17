@@ -3,13 +3,15 @@
 //   2 clone   POST libdrives/<image>/action/?do=clone
 //   3 wait    GET  drives/<uuid>/                    čeká na dokončení klonování (jen čtení)
 //   4 resize  PUT  drives/<uuid>/                    jen zvětšení odpojeného disku
-//   5 attach  PUT  servers/<uuid>/                   disk (virtio, 0:0, boot_order 1), VLAN, SSH klíč
+//   5 attach  PUT  servers/<uuid>/                   disk (virtio, 0:0, boot_order 1), VLAN své skupiny, SSH klíč
 //   6 verify  GET  servers/<uuid>/
 //   7 start   POST servers/<uuid>/action/?do=start   jen když je zvoleno
 // Zápisy se při chybě neopakují. Volání jdou přes "transport": zde simulovaný cloud (cloudsim.js).
 const Deployer = (() => {
   const STEPS = ["create", "clone", "wait", "resize", "attach", "verify", "start"];
   const GIB = 1073741824;
+  // VLAN dané VM: každá skupina (větev) topologie má vlastní VLAN, proto má přednost opts.vlanOf(vm); opts.vlan je společná záloha
+  const vlanFor = (vm, opts) => (opts.vlanOf ? opts.vlanOf(vm) : opts.vlan) || "";
 
   class ApiError extends Error {
     constructor(status, diagnostics) { super("CloudSigma HTTP " + status + (diagnostics ? ": " + diagnostics : "")); this.status = status; this.diagnostics = diagnostics; }
@@ -68,13 +70,14 @@ const Deployer = (() => {
       } else step("resize", "skipped", "image má " + (drive.size / GIB).toFixed(1) + " GiB, disk se nezmenšuje");
 
       step("attach", "running"); current = "attach";
+      const vlan = vlanFor(vm, opts);
       const fresh = await api.call("GET", "servers/" + created.vm + "/", null, null, tag);
       if (fresh.status !== "stopped") throw new Error("VM není zastavená");
       const body = { name: fresh.name, cpu: fresh.cpu, mem: fresh.mem, smp: fresh.smp, vnc_password: fresh.vnc_password,
-        drives: [{ drive: created.disk, device: "virtio", dev_channel: "0:0", boot_order: 1 }], nics: opts.vlan ? [{ model: "virtio", vlan: opts.vlan }] : [] };
+        drives: [{ drive: created.disk, device: "virtio", dev_channel: "0:0", boot_order: 1 }], nics: vlan ? [{ model: "virtio", vlan }] : [] };
       if (opts.key) body.pubkeys = [opts.key];                 // ověřený formát tenantu: seznam holých UUID
       await api.call("PUT", "servers/" + created.vm + "/", body, null, tag);
-      step("attach", "ok", (opts.vlan ? "síť nastavena" : "bez NIC") + (opts.key ? ", SSH klíč přiřazen" : ""));
+      step("attach", "ok", (vlan ? "síť nastavena" : "bez NIC") + (opts.key ? ", SSH klíč přiřazen" : ""));
 
       step("verify", "running"); current = "verify";
       const ver = await api.call("GET", "servers/" + created.vm + "/", null, null, tag);
@@ -142,7 +145,7 @@ const Deployer = (() => {
       { step: "clone", method: "POST", path: "libdrives/" + opts.image + "/action/?do=clone", body: { name: vm.name + "-root" } },
       { step: "wait", method: "GET", path: "drives/<uuid disku>/", body: null, note: "opakuje se do stavu unmounted (jen čtení)" },
       { step: "resize", method: "PUT", path: "drives/<uuid disku>/", body: { name: vm.name + "-root", size: vm.disk_gib * GIB, media: "disk", storage_type: "<z image>" }, note: "jen když je image menší než " + vm.disk_gib + " GiB" },
-      { step: "attach", method: "PUT", path: "servers/<uuid VM>/", body: Object.assign({ name: vm.name, cpu: vm.cpu_mhz, mem: vm.mem_bytes, smp: vm.smp, vnc_password: "<z VM>", drives: [{ drive: "<uuid disku>", device: "virtio", dev_channel: "0:0", boot_order: 1 }], nics: opts.vlan ? [{ model: "virtio", vlan: opts.vlan }] : [] }, opts.key ? { pubkeys: [opts.key] } : {}) },
+      { step: "attach", method: "PUT", path: "servers/<uuid VM>/", body: Object.assign({ name: vm.name, cpu: vm.cpu_mhz, mem: vm.mem_bytes, smp: vm.smp, vnc_password: "<z VM>", drives: [{ drive: "<uuid disku>", device: "virtio", dev_channel: "0:0", boot_order: 1 }], nics: vlanFor(vm, opts) ? [{ model: "virtio", vlan: vlanFor(vm, opts) }] : [] }, opts.key ? { pubkeys: [opts.key] } : {}) },
       { step: "verify", method: "GET", path: "servers/<uuid VM>/", body: null }
     ];
     if (opts.start) out.push({ step: "start", method: "POST", path: "servers/<uuid VM>/action/?do=start", body: {} });

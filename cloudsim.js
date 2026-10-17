@@ -17,7 +17,7 @@ const SimCloud = (() => {
       servers: {}, drives: {},
       library: [["Ubuntu 22.04 LTS", 10], ["Ubuntu 24.04 LTS", 10], ["Debian 12", 8], ["Rocky Linux 9", 10], ["AlmaLinux 9", 10]]
         .map(([name, gib]) => ({ uuid: uid(), name, size: gib * GIB, media: "disk", image_type: "preinst", deprecated: false })),
-      vlans: [["Interní síť APP", ""], ["Interní síť DATA", ""], ["Provozní síť OPS", ""]].map(([name]) => ({ uuid: uid(), name })),
+      vlans: [["DMZ síť", ""], ["Interní síť APP", ""], ["Interní síť DATA", ""], ["Provozní síť OPS", ""], ["Síť CI/CD", ""]].map(([name]) => ({ uuid: uid(), name })),
       keys: [{ uuid: uid(), name: "deploy-key" }, { uuid: uid(), name: "admin-key" }]
     });
     S = fresh();
