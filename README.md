@@ -1,4 +1,4 @@
-# Business Cloud Solution Designer
+# bc-designer (Business Cloud Solution Designer)
 
 Webová aplikace, která provede uživatele od obchodního zadání k návrhu infrastruktury, ceně a provozu Kubernetes clusteru. Vznikla na hackathonu (Business Cloud IaaS / PaaS).
 
@@ -53,9 +53,9 @@ python3 -m http.server 8080
 
 Manifest `k8s.yaml` vytvoří v namespace `hackaithon`:
 
-- **ConfigMap** `topologie-web` se soubory aplikace,
-- **Deployment** `topologie-web` (`nginx:1.27-alpine`), ConfigMap je připojená do `/usr/share/nginx/html`,
-- **Service** `topologie-web` na portu 80.
+- **ConfigMap** `bc-designer` se soubory aplikace,
+- **Deployment** `bc-designer` (`nginx:1.27-alpine`), ConfigMap je připojená do `/usr/share/nginx/html`,
+- **Service** `bc-designer` na portu 80.
 
 `ingress.yaml` publikuje aplikaci na `dev-kube.prg1paas.t-cloud.eu` pod cestou `/hackaithon`.
 
@@ -63,7 +63,7 @@ Manifest `k8s.yaml` vytvoří v namespace `hackaithon`:
 kubectl create namespace hackaithon   # pokud ještě neexistuje
 kubectl apply -f k8s.yaml
 kubectl apply -f ingress.yaml
-kubectl -n hackaithon rollout status deployment/topologie-web
+kubectl -n hackaithon rollout status deployment/bc-designer
 ```
 
 Po změně souborů je potřeba `k8s.yaml` přegenerovat (obsah je do ConfigMapy vložený) a znovu aplikovat. Soubor je velký (stovky kB), protože obsahuje celou aplikaci.

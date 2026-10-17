@@ -3227,25 +3227,25 @@ data:
     další systémy\"]] },\n];\n"
 kind: ConfigMap
 metadata:
-  name: topologie-web
+  name: bc-designer
   namespace: hackaithon
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: topologie-web
+  name: bc-designer
   namespace: hackaithon
   labels:
-    app: topologie-web
+    app: bc-designer
 spec:
   replicas: 2
   selector:
     matchLabels:
-      app: topologie-web
+      app: bc-designer
   template:
     metadata:
       labels:
-        app: topologie-web
+        app: bc-designer
     spec:
       containers:
         - name: nginx
@@ -3270,19 +3270,19 @@ spec:
       volumes:
         - name: html
           configMap:
-            name: topologie-web
+            name: bc-designer
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: topologie-web
+  name: bc-designer
   namespace: hackaithon
   labels:
-    app: topologie-web
+    app: bc-designer
 spec:
   type: ClusterIP
   selector:
-    app: topologie-web
+    app: bc-designer
   ports:
     - name: http
       port: 80
