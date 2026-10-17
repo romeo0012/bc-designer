@@ -22,7 +22,7 @@ data:
           servers: {}, drives: {},
           library: [["Ubuntu 22.04 LTS", 10], ["Ubuntu 24.04 LTS", 10], ["Debian 12", 8], ["Rocky Linux 9", 10], ["AlmaLinux 9", 10]]
             .map(([name, gib]) => ({ uuid: uid(), name, size: gib * GIB, media: "disk", image_type: "preinst", deprecated: false })),
-          vlans: [["DMZ síť", ""], ["K8S", ""], ["Interní síť APP", ""], ["Interní síť DATA", ""], ["Provozní síť OPS", ""], ["Síť CI/CD", ""]].map(([name]) => ({ uuid: uid(), name })),
+          vlans: [["DMZ", ""], ["K8S", ""], ["OPS", ""], ["CICD", ""]].map(([name]) => ({ uuid: uid(), name })),
           keys: [{ uuid: uid(), name: "deploy-key" }, { uuid: uid(), name: "admin-key" }]
         });
         S = fresh();
@@ -1777,16 +1777,16 @@ data:
       setImg(); imgL.append(mkEl("span", "dp-lbl", T("Image z knihovny")), imgShow, imgBtn);
       const mkSel = (key, none, items) => { const s = document.createElement("select"); s.add(new Option(none, "")); items.forEach((i) => s.add(new Option(i.name, i.uuid))); s.value = deployCfg[key]; s.addEventListener("change", () => { deployCfg[key] = s.value; save(); }); return s; };
       const keyS = mkSel("key", T("Bez klíče"), []);
-      // každá síť (sloupec topologie: DMZ, K8S, OPS, CICD) má vlastní VLAN tenantu; předvyplní se podle názvu, dokud ji uživatel nezmění
-      const grpVlan = [], VLAN_DEFAULT = { DMZ: "DMZ síť", K8S: "K8S", OPS: "Provozní síť OPS", CICD: "Síť CI/CD" };
+      // každá síť (sloupec topologie: DMZ, K8S, OPS, CICD) má vlastní VLAN; nabízí se jen sítě přiřazené v Architekt módu, výchozí je VLAN stejného názvu
+      const grpVlan = [];
       const vlanOfCat = (cat) => deployCfg.vlans[cat] || "";
       const fillSel = () => {
         keyS.innerHTML = ""; keyS.add(new Option(T("Bez klíče"), "")); sim.lists.keys.forEach((i) => keyS.add(new Option(i.name, i.uuid))); keyS.value = deployCfg.key;
-        const items = sim.lists.vlans;
+        const assigned = new Set(grpVlan.map((g) => g.cat)), items = sim.lists.vlans.filter((i) => assigned.has(i.name));   // jen VLAN přiřazené v Architekt módu
         grpVlan.forEach(({ cat, s }) => {
           let cur = deployCfg.vlans[cat];
           if (cur && !items.some((i) => i.uuid === cur)) cur = undefined;                    // uložená VLAN už v tenantu není
-          if (cur === undefined) { const d = items.find((i) => i.name === VLAN_DEFAULT[cat]); cur = d ? d.uuid : ""; deployCfg.vlans[cat] = cur; }
+          if (cur === undefined) { const d = items.find((i) => i.name === cat); cur = d ? d.uuid : ""; deployCfg.vlans[cat] = cur; }
           s.innerHTML = ""; s.add(new Option(T("Bez VLAN"), "")); items.forEach((i) => s.add(new Option(i.name, i.uuid))); s.value = cur;
         });
         save();
@@ -1813,9 +1813,8 @@ data:
       ["planned", "queued", "deploying", "deployed", "failed", "excluded"].forEach((s) => { const i = mkEl("span", "sim-key"); i.append(mkEl("i", "sim-sw st-" + s), document.createTextNode(T(SIM_ST[s]))); legend.appendChild(i); });
       box.append(legend, mkEl("p", "note", T("Klikněte na VM pro vyřazení z nasazení (nebo návrat). Nasazené VM zůstávají zelené.")));
 
-      // --- topologie: INTERNET -> WAN -> skupiny s kartami VM ---
-      const topo = mkEl("div", "sim-topo"), top = mkEl("div", "sim-top"), cols = mkEl("div", "sim-cols");
-      top.append(mkEl("div", "sim-internet", "INTERNET"), mkEl("span", "sim-arrow", "→"), mkEl("div", "sim-wan", "WAN"));
+      // --- topologie: sloupce = sítě (VLAN) s kartami VM ---
+      const topo = mkEl("div", "sim-topo"), cols = mkEl("div", "sim-cols");
       const groups = new Map(); vmsAll.forEach((v) => { if (!groups.has(v.net)) groups.set(v.net, []); groups.get(v.net).push(v); });
       const order = NETS.filter((n) => groups.has(n));   // sloupce = sítě (VLAN) v pevném pořadí DMZ, K8S, OPS, CICD
       const cards = [], groupBtns = [];
@@ -1836,9 +1835,9 @@ data:
           card.addEventListener("click", toggle); card.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); toggle(); } });
           grp.appendChild(card); cards.push({ v, card, badge, dots, det });
         });
-        col.append(mkEl("div", "sim-tab", net), grp); cols.appendChild(col);
+        col.append(grp); cols.appendChild(col);
       });
-      topo.append(top, cols); box.appendChild(topo);
+      topo.append(cols); box.appendChild(topo);
 
       // --- ovládání a zprávy ---
       const actions = mkEl("div", "actions"), go = mkEl("button", "btn primary dp-go"), stop = mkEl("button", "btn", T("Zastavit")), reset = mkEl("button", "btn danger", T("Vynulovat simulaci"));
